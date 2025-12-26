@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -6,6 +6,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
 const NOTE_COUNT = 50; // Number of random notes
+const SCROLL_SPEED = 2; // Pixels per frame (configurable - higher = faster)
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -19,6 +20,9 @@ type Note = {
 
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isTouching, setIsTouching] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollPosition = useRef(0);
 
   // Generate random notes
   const notes = useMemo(() => {
@@ -40,12 +44,39 @@ export default function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
 
+  // Auto-scroll effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isTouching && scrollViewRef.current) {
+        scrollPosition.current += SCROLL_SPEED;
+
+        // Reset to top when reaching bottom
+        if (scrollPosition.current >= TRACK_HEIGHT - Dimensions.get('window').height) {
+          scrollPosition.current = 0;
+        }
+
+        scrollViewRef.current.scrollTo({
+          y: scrollPosition.current,
+          animated: false,
+        });
+      }
+    }, 16); // ~60 FPS
+
+    return () => clearInterval(interval);
+  }, [isTouching]);
+
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onTouchStart={() => setIsTouching(true)}
+        onTouchEnd={() => setIsTouching(false)}
+        onScrollBeginDrag={() => setIsTouching(true)}
+        onScrollEndDrag={() => setIsTouching(false)}
+        onMomentumScrollEnd={() => setIsTouching(false)}
       >
         <View style={styles.track}>
           {/* Render vertical lanes */}
