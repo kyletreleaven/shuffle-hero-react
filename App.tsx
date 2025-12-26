@@ -21,6 +21,7 @@ type Note = {
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -44,20 +45,20 @@ export default function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
 
-  // Sync state to ScrollView whenever scrollY changes
+  // Sync state to ScrollView only during auto-scroll (not manual interaction)
   useEffect(() => {
-    if (scrollViewRef.current) {
+    if (!isTouching && !isScrolling && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({
         y: scrollY,
         animated: false,
       });
     }
-  }, [scrollY]);
+  }, [scrollY, isTouching, isScrolling]);
 
-  // Auto-scroll effect - updates state
+  // Auto-scroll effect - updates state when not touching AND not scrolling
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isTouching) {
+      if (!isTouching && !isScrolling) {
         setScrollY((prev) => {
           const newY = prev + SCROLL_SPEED;
 
@@ -72,7 +73,7 @@ export default function App() {
     }, 16); // ~60 FPS
 
     return () => clearInterval(interval);
-  }, [isTouching]);
+  }, [isTouching, isScrolling]);
 
   return (
     <View style={styles.container}>
@@ -83,9 +84,18 @@ export default function App() {
         showsVerticalScrollIndicator={false}
         onTouchStart={() => setIsTouching(true)}
         onTouchEnd={() => setIsTouching(false)}
-        onScrollBeginDrag={() => setIsTouching(true)}
-        onScrollEndDrag={() => setIsTouching(false)}
-        onMomentumScrollEnd={() => setIsTouching(false)}
+        onScrollBeginDrag={() => setIsScrolling(true)}
+        onScrollEndDrag={(event) => {
+          setScrollY(event.nativeEvent.contentOffset.y);
+          setIsScrolling(false);
+        }}
+        onMomentumScrollBegin={() => {
+          setIsScrolling(true);
+        }}
+        onMomentumScrollEnd={(event) => {
+          setScrollY(event.nativeEvent.contentOffset.y);
+          setIsScrolling(false);
+        }}
       >
         <View style={styles.track}>
           {/* Render vertical lanes */}
