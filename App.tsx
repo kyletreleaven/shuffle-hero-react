@@ -104,13 +104,15 @@ export default function App() {
         </View>
       </ScrollView>
 
-      {/* Menu button overlay */}
-      <TouchableOpacity
-        style={styles.openButton}
-        onPress={() => setMenuVisible(true)}
-      >
-        <Text style={styles.buttonText}>Open Menu</Text>
-      </TouchableOpacity>
+      {/* Bottom button row */}
+      <View style={styles.bottomButtonRow}>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => setMenuVisible(true)}
+        >
+          <Text style={styles.buttonText}>Menu</Text>
+        </TouchableOpacity>
+      </View>
 
       <Modal
         visible={menuVisible}
@@ -144,6 +146,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    marginBottom: 0,
   },
   scrollContent: {
     alignItems: 'center',
@@ -175,10 +178,17 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  openButton: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
+  bottomButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#1a1a1a',
+    borderTopWidth: 2,
+    borderTopColor: '#4a4a4a',
+    gap: 12,
+  },
+  bottomButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 24,
     paddingVertical: 12,
