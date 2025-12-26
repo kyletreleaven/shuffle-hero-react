@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
+
+const TRACK_HEIGHT = 3000; // Extra tall for scrolling
+const LANE_COUNT = 4;
 
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -13,6 +16,20 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.track}>
+          {/* Render vertical lanes */}
+          {Array.from({ length: LANE_COUNT }).map((_, index) => (
+            <View key={index} style={styles.lane} />
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Menu button overlay */}
       <TouchableOpacity
         style={styles.openButton}
         onPress={() => setMenuVisible(true)}
@@ -48,14 +65,35 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#1a1a1a',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     alignItems: 'center',
-    justifyContent: 'center',
+  },
+  track: {
+    width: Dimensions.get('window').width,
+    height: TRACK_HEIGHT,
+    backgroundColor: '#2a2a2a',
+    flexDirection: 'row',
+    borderLeftWidth: 2,
+    borderRightWidth: 2,
+    borderColor: '#4a4a4a',
+  },
+  lane: {
+    flex: 1,
+    borderRightWidth: 1,
+    borderColor: '#4a4a4a',
   },
   openButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
     backgroundColor: '#007AFF',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 8,
     elevation: 3,
     shadowColor: '#000',
