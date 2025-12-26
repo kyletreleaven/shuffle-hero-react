@@ -21,8 +21,8 @@ type Note = {
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
-  const scrollPosition = useRef(0);
 
   // Generate random notes
   const notes = useMemo(() => {
@@ -44,20 +44,29 @@ export default function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
 
-  // Auto-scroll effect
+  // Sync state to ScrollView whenever scrollY changes
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: scrollY,
+        animated: false,
+      });
+    }
+  }, [scrollY]);
+
+  // Auto-scroll effect - updates state
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isTouching && scrollViewRef.current) {
-        scrollPosition.current += SCROLL_SPEED;
+      if (!isTouching) {
+        setScrollY((prev) => {
+          const newY = prev + SCROLL_SPEED;
 
-        // Reset to top when reaching bottom
-        if (scrollPosition.current >= TRACK_HEIGHT - Dimensions.get('window').height) {
-          scrollPosition.current = 0;
-        }
+          // Reset to top when reaching bottom
+          if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
+            return 0;
+          }
 
-        scrollViewRef.current.scrollTo({
-          y: scrollPosition.current,
-          animated: false,
+          return newY;
         });
       }
     }, 16); // ~60 FPS
