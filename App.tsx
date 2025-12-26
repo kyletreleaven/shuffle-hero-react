@@ -1,13 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
+const NOTE_COUNT = 50; // Number of random notes
+
+// Guitar Hero-style note colors
+const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
+
+type Note = {
+  id: number;
+  lane: number;
+  position: number;
+  color: string;
+};
 
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
+
+  // Generate random notes
+  const notes = useMemo(() => {
+    const generatedNotes: Note[] = [];
+    for (let i = 0; i < NOTE_COUNT; i++) {
+      const lane = Math.floor(Math.random() * LANE_COUNT);
+      generatedNotes.push({
+        id: i,
+        lane,
+        position: Math.random() * (TRACK_HEIGHT - 100) + 50,
+        color: NOTE_COLORS[lane],
+      });
+    }
+    return generatedNotes;
+  }, []);
 
   useEffect(() => {
     // Lock to landscape mode but allow both orientations
@@ -26,6 +52,24 @@ export default function App() {
           {Array.from({ length: LANE_COUNT }).map((_, index) => (
             <View key={index} style={styles.lane} />
           ))}
+
+          {/* Render notes */}
+          {notes.map((note) => {
+            const laneWidth = Dimensions.get('window').width / LANE_COUNT;
+            return (
+              <View
+                key={note.id}
+                style={[
+                  styles.note,
+                  {
+                    backgroundColor: note.color,
+                    left: note.lane * laneWidth + laneWidth / 2 - 30,
+                    top: note.position,
+                  },
+                ]}
+              />
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -86,6 +130,19 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRightWidth: 1,
     borderColor: '#4a4a4a',
+  },
+  note: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 8,
   },
   openButton: {
     position: 'absolute',
