@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
+
+  useEffect(() => {
+    // Lock to landscape mode but allow both orientations
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+  }, []);
 
   return (
     <View style={styles.container}>
