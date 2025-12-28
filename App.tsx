@@ -242,6 +242,11 @@ export default function App() {
     setShuffleState({ permutation: perm, currentRound: 0 });
   };
 
+  const reverse = () => {
+    const invertedPerm = ShuffleUtil.invertPerm(permutation);
+    setShuffleState({ permutation: invertedPerm, currentRound: 0 });
+  };
+
   const setNumberOfCards = (n: number) => {
     reShuffle(n);
   };
@@ -447,7 +452,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => {/* TODO: Reverse */}}
+          onPress={reverse}
         >
           <Text style={styles.buttonText}>Reverse</Text>
         </TouchableOpacity>
