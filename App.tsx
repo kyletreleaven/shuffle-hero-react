@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
+import * as ShuffleUtil from './ShuffleUtil';
 
 const LANE_COUNT = 4;
 const NOTE_COUNT = 50; // Number of cards
@@ -217,6 +218,14 @@ export default function App() {
   const [numberOfCards, setNumberOfCards] = useState(NOTE_COUNT);
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+  const [shuffleKey, setShuffleKey] = useState(0);
+
+  // Generate permutation - regenerates when numberOfCards or shuffleKey changes
+  const permutation = useMemo(() => {
+    const perm = Array.from({ length: numberOfCards }, (_, i) => i);
+    ShuffleUtil.shuffle(perm);
+    return perm;
+  }, [numberOfCards, shuffleKey]);
 
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
@@ -367,6 +376,7 @@ export default function App() {
       {/* Debug HUD */}
       {SHOW_DEBUG_HUD && (
         <View style={styles.debugHUD}>
+          <Text style={styles.debugText}>shuffleKey: {shuffleKey}</Text>
           <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
           <Text style={styles.debugText}>isRegularScrolling: {isRegularScrolling ? '✓' : '✗'}</Text>
           <Text style={styles.debugText}>isMomentumScrolling: {isMomentumScrolling ? '✓' : '✗'}</Text>
@@ -387,7 +397,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => {/* TODO: Shuffle */}}
+          onPress={() => setShuffleKey(k => k + 1)}
         >
           <Text style={styles.buttonText}>Shuffle</Text>
         </TouchableOpacity>
