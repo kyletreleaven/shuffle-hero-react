@@ -18,6 +18,35 @@ type Note = {
   color: string;
 };
 
+type MenuPanelProps = {
+  visible: boolean;
+  onClose: () => void;
+};
+
+function MenuPanel({ visible, onClose }: MenuPanelProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.menuPanel}>
+          <Text style={styles.menuTitle}>Options Menu</Text>
+
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={onClose}
+          >
+            <Text style={styles.buttonText}>Close Menu</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
@@ -185,25 +214,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={menuVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.menuPanel}>
-            <Text style={styles.menuTitle}>Options Menu</Text>
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setMenuVisible(false)}
-            >
-              <Text style={styles.buttonText}>Close Menu</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <MenuPanel visible={menuVisible} onClose={() => setMenuVisible(false)} />
 
       <StatusBar style="auto" />
     </View>
