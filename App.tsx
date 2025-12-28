@@ -65,25 +65,27 @@ type NumberOfLanesControlProps = {
 };
 
 function NumberOfLanesControl({ value, onChange }: NumberOfLanesControlProps) {
+  const presets = [4, 5, 6, 7];
+
   return (
     <View style={styles.settingControl}>
       <Text style={styles.settingLabel}>Number of Lanes</Text>
-      <View style={styles.settingButtons}>
-        <TouchableOpacity
-          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.max(1, value - 1))}
-          disabled={value <= 1}
-        >
-          <Text style={styles.settingButtonText}>−</Text>
-        </TouchableOpacity>
-        <Text style={styles.settingValue}>{value}</Text>
-        <TouchableOpacity
-          style={[styles.settingButton, value >= 8 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.min(8, value + 1))}
-          disabled={value >= 8}
-        >
-          <Text style={styles.settingButtonText}>+</Text>
-        </TouchableOpacity>
+      <View style={styles.presetButtons}>
+        {presets.map((preset) => (
+          <TouchableOpacity
+            key={preset}
+            style={[
+              styles.presetButton,
+              value === preset && styles.presetButtonSelected
+            ]}
+            onPress={() => onChange(preset)}
+          >
+            <Text style={[
+              styles.presetButtonText,
+              value === preset && styles.presetButtonTextSelected
+            ]}>{preset}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -517,5 +519,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
+  },
+  presetButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  presetButton: {
+    flex: 1,
+    backgroundColor: '#333',
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#555',
+  },
+  presetButtonSelected: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  presetButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  presetButtonTextSelected: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
