@@ -221,7 +221,7 @@ export default function App() {
   const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
 
-  // Generate notes with round-robin dealing and constant spacing
+  // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
     for (let i = 0; i < numberOfCards; i++) {
@@ -229,7 +229,7 @@ export default function App() {
       generatedNotes.push({
         id: i,
         lane,
-        position: i * CARD_SPACING + 100,
+        position: TRACK_HEIGHT - (i * CARD_SPACING + 100),
         color: NOTE_COLORS[lane % NOTE_COLORS.length],
       });
     }
