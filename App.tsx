@@ -408,10 +408,13 @@ export default function App() {
       {/* Time Remaining Display */}
       <View style={styles.timeDisplay}>
         <Text style={styles.timeText}>
-          {scrollSpeed > 0
-            ? `${Math.max(0, scrollY / (scrollSpeed * CARD_SPACING)).toFixed(1)}s`
-            : '∞'
-          }
+          {scrollSpeed > 0 ? (() => {
+            const currentRoundTime = Math.max(0, scrollY / (scrollSpeed * CARD_SPACING));
+            const timePerRound = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
+            const remainingRounds = numberOfRounds - currentRound - 1;
+            const totalTime = currentRoundTime + (remainingRounds * timePerRound);
+            return `Round ${currentRound + 1}/${numberOfRounds} | ${currentRoundTime.toFixed(1)}s | Total: ${totalTime.toFixed(1)}s`;
+          })() : '∞'}
         </Text>
       </View>
 
