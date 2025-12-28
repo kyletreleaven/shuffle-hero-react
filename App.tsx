@@ -8,6 +8,7 @@ const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
 const NOTE_COUNT = 50; // Number of random notes
 const SCROLL_SPEED = 2; // Pixels per frame (configurable - higher = faster)
+const CARD_SPACING = 100; // Vertical spacing between cards
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -213,15 +214,15 @@ export default function App() {
   const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
 
-  // Generate random notes
+  // Generate notes with round-robin dealing and constant spacing
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
     for (let i = 0; i < numberOfCards; i++) {
-      const lane = Math.floor(Math.random() * numberOfLanes);
+      const lane = i % numberOfLanes;
       generatedNotes.push({
         id: i,
         lane,
-        position: Math.random() * (TRACK_HEIGHT - 100) + 50,
+        position: i * CARD_SPACING + 100,
         color: NOTE_COLORS[lane % NOTE_COLORS.length],
       });
     }
