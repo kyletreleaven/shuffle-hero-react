@@ -301,10 +301,10 @@ export default function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
 
-  // Reset scroll position when number of cards changes
+  // Reset scroll position when number of cards or round changes
   useEffect(() => {
     setScrollY(trackHeight - windowHeight);
-  }, [numberOfCards, trackHeight, windowHeight]);
+  }, [numberOfCards, currentRound, trackHeight, windowHeight]);
 
   // Sync state to ScrollView only during auto-scroll (not manual interaction)
   useEffect(() => {
