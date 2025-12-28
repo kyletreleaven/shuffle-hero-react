@@ -354,6 +354,16 @@ export default function App() {
         </View>
       </ScrollView>
 
+      {/* Time Remaining Display */}
+      <View style={styles.timeDisplay}>
+        <Text style={styles.timeText}>
+          {scrollSpeed > 0
+            ? `${Math.max(0, scrollY / (scrollSpeed * CARD_SPACING)).toFixed(1)}s`
+            : '∞'
+          }
+        </Text>
+      </View>
+
       {/* Debug HUD */}
       {SHOW_DEBUG_HUD && (
         <View style={styles.debugHUD}>
@@ -647,5 +657,21 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     fontWeight: '600',
+  },
+  timeDisplay: {
+    position: 'absolute',
+    top: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timeText: {
+    color: '#c9b620ff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
