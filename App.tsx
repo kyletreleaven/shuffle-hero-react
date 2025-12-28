@@ -131,6 +131,15 @@ export default function App() {
         </View>
       </ScrollView>
 
+      {/* Debug HUD */}
+      <View style={styles.debugHUD}>
+        <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>isScrolling: {isScrolling ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>awaitingMomentum: {awaitingMomentumScroll ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>inhibitAutoScroll: {inhibitAutoScroll ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>scrollY: {Math.round(scrollY)}</Text>
+      </View>
+
       {/* Bottom button row */}
       <View style={styles.bottomButtonRow}>
         <TouchableOpacity
@@ -204,6 +213,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 8,
+  },
+  debugHUD: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4a4a4a',
+  },
+  debugText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    marginVertical: 2,
   },
   bottomButtonRow: {
     flexDirection: 'row',
