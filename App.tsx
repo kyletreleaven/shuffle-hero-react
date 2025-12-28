@@ -206,6 +206,7 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
   );
 }
 
+
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
@@ -215,21 +216,41 @@ export default function App() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Game settings
-  const [numberOfCards, setNumberOfCards] = useState(NOTE_COUNT);
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
-  const [currentRound, setCurrentRound] = useState(0);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
-  const [shuffleKey, setShuffleKey] = useState(0);
 
-  // Generate permutation - regenerates when numberOfCards or shuffleKey changes
-  const permutation = useMemo(() => {
-    const perm = Array.from({ length: numberOfCards }, (_, i) => i);
+  type ShuffleState = {
+    permutation: number[];
+    currentRound: number;
+  };
+
+  const samplePermutation = (numCards: number) => {
+    const perm = Array.from({ length: numCards }, (_, i) => i);
     ShuffleUtil.shuffle(perm);
     return perm;
-  }, [numberOfCards, shuffleKey]);
+  }
+
+  const [{permutation, currentRound}, setShuffleState] = useState<ShuffleState>(() => {
+    const perm = samplePermutation(NOTE_COUNT);
+    return { permutation: perm, currentRound: 0 };
+  });
+  const numberOfCards = permutation.length;
+  
+  // Setters that maintain invariants
+  const reShuffle = (n?: number) => {
+    const perm = samplePermutation(n ?? numberOfCards);
+    setShuffleState({ permutation: perm, currentRound: 0 });
+  };
+
+  const setNumberOfCards = (n: number) => {
+    reShuffle(n);
+  };
+
+  const setCurrentRound = (round: number) => {
+    setShuffleState(prev => ({ ...prev, currentRound: round }));
+  };
 
   const shuffle = useMemo(() => {
-
     const rounds = ShuffleUtil.computeStackShuffleRounds(permutation, numberOfLanes, true);
     const nRounds = rounds.length;
 
@@ -237,15 +258,14 @@ export default function App() {
 
     for (let r = 1; r < nRounds; r++) {
       const piles = ShuffleUtil.createPiles(numberOfLanes);
-      ShuffleUtil.dealStacks(seqs[r - 1], rounds[r], piles);
+      ShuffleUtil.dealStacks(seqs[r - 1], rounds[r - 1], piles);
       seqs.push(ShuffleUtil.collectPiles(piles));
     }
 
-    return {rounds, seqs};
-
-    // TODO: reset current round to zero
-
+    return { rounds, seqs };
   }, [permutation, numberOfLanes]);
+
+  const numberOfRounds = shuffle.rounds.length;
 
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
@@ -274,7 +294,7 @@ export default function App() {
       });
     }
     return generatedNotes;
-  }, [numberOfCards, numberOfLanes, firstCardPosition]);
+  }, [shuffle.seqs[currentRound]]);
 
   useEffect(() => {
     // Lock to landscape mode but allow both orientations
@@ -398,7 +418,6 @@ export default function App() {
       {/* Debug HUD */}
       {SHOW_DEBUG_HUD && (
         <View style={styles.debugHUD}>
-          <Text style={styles.debugText}>shuffleKey: {shuffleKey}</Text>
           <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
           <Text style={styles.debugText}>isRegularScrolling: {isRegularScrolling ? '✓' : '✗'}</Text>
           <Text style={styles.debugText}>isMomentumScrolling: {isMomentumScrolling ? '✓' : '✗'}</Text>
@@ -419,7 +438,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => setShuffleKey(k => k + 1)}
+          onPress={() => reShuffle()}
         >
           <Text style={styles.buttonText}>Shuffle</Text>
         </TouchableOpacity>
@@ -437,13 +456,13 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => {/* TODO: Prev Round */}}
+          onPress={() => setCurrentRound(Math.max(0, currentRound - 1))}
         >
           <Text style={styles.buttonText}>Prev</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => {/* TODO: Next Round */}}
+          onPress={() => setCurrentRound(Math.min(numberOfRounds - 1, currentRound + 1))}
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
