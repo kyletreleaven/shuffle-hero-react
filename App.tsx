@@ -22,8 +22,11 @@ export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
 
   // Generate random notes
   const notes = useMemo(() => {
@@ -47,33 +50,34 @@ export default function App() {
 
   // Sync state to ScrollView only during auto-scroll (not manual interaction)
   useEffect(() => {
-    if (!isTouching && !isScrolling && scrollViewRef.current) {
+    if (!inhibitAutoScroll && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({
         y: scrollY,
         animated: false,
       });
     }
-  }, [scrollY, isTouching, isScrolling]);
+  }, [scrollY, inhibitAutoScroll]);
 
   // Auto-scroll effect - updates state when not touching AND not scrolling
   useEffect(() => {
+
+    if (inhibitAutoScroll) return;
+
     const interval = setInterval(() => {
-      if (!isTouching && !isScrolling) {
-        setScrollY((prev) => {
-          const newY = prev + SCROLL_SPEED;
+      setScrollY((prev) => {
+        const newY = prev + SCROLL_SPEED;
 
-          // Reset to top when reaching bottom
-          if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
-            return 0;
-          }
+        // Reset to top when reaching bottom
+        if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
+          return 0;
+        }
 
-          return newY;
-        });
-      }
+        return newY;
+      });
     }, 16); // ~60 FPS
-
+    
     return () => clearInterval(interval);
-  }, [isTouching, isScrolling]);
+  }, [inhibitAutoScroll]);
 
   return (
     <View style={styles.container}>
@@ -88,6 +92,10 @@ export default function App() {
         onScrollEndDrag={(event) => {
           setScrollY(event.nativeEvent.contentOffset.y);
           setIsScrolling(false);
+          setAwaitingMomentumScroll(true);
+          const timeoutId = setTimeout(() => {
+            setAwaitingMomentumScroll(false);
+          }, 50);
         }}
         onMomentumScrollBegin={() => {
           setIsScrolling(true);
