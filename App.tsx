@@ -210,7 +210,7 @@ export default function App() {
   const [isRegularScrolling, setIsRegularScrolling] = useState(false);
   const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
   const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [scrollY, setScrollY] = useState(TRACK_HEIGHT - Dimensions.get('window').height);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Game settings
@@ -265,10 +265,10 @@ export default function App() {
         const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
 
         setScrollY((prev) => {
-          const newY = prev + pixelsToScroll;
+          const newY = prev - pixelsToScroll;
 
-          // Reset to top when reaching bottom
-          if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
+          // Stop at top
+          if (newY <= 0) {
             return 0;
           }
 
