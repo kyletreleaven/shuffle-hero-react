@@ -153,6 +153,36 @@ export default function App() {
         >
           <Text style={styles.buttonText}>Menu</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {/* TODO: Shuffle */}}
+        >
+          <Text style={styles.buttonText}>Shuffle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {/* TODO: Reverse */}}
+        >
+          <Text style={styles.buttonText}>Reverse</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {/* TODO: Restart Round */}}
+        >
+          <Text style={styles.buttonText}>Restart</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {/* TODO: Prev Round */}}
+        >
+          <Text style={styles.buttonText}>Prev</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {/* TODO: Next Round */}}
+        >
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
       </View>
 
       <Modal
