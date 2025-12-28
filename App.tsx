@@ -279,7 +279,9 @@ export default function App() {
                     top: note.position,
                   },
                 ]}
-              />
+              >
+                <Text style={styles.noteNumber}>{note.id + 1}</Text>
+              </View>
             );
           })}
         </View>
@@ -390,6 +392,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noteNumber: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   debugHUD: {
     position: 'absolute',
