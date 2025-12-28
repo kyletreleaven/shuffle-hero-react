@@ -6,8 +6,8 @@ import Slider from '@react-native-community/slider';
 
 const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
-const NOTE_COUNT = 50; // Number of random notes
-const SCROLL_SPEED = 2; // Pixels per frame (configurable - higher = faster)
+const NOTE_COUNT = 50; // Number of cards
+const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const CARD_SPACING = 100; // Vertical spacing between cards
 
 // Guitar Hero-style note colors
@@ -135,7 +135,7 @@ function SpeedControl({ value, onChange }: SpeedControlProps) {
   return (
     <View style={styles.settingControl}>
       <View style={styles.sliderHeader}>
-        <Text style={styles.settingLabel}>Speed</Text>
+        <Text style={styles.settingLabel}>Speed (cards/sec)</Text>
         <Text style={styles.sliderValue}>{value.toFixed(1)}</Text>
       </View>
       <Slider
@@ -246,23 +246,36 @@ export default function App() {
 
   // Auto-scroll effect - updates state when not touching AND not scrolling
   useEffect(() => {
-
     if (inhibitAutoScroll) return;
 
-    const interval = setInterval(() => {
-      setScrollY((prev) => {
-        const newY = prev + scrollSpeed;
+    let animationFrameId: number;
+    let lastTimestamp: number | null = null;
 
-        // Reset to top when reaching bottom
-        if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
-          return 0;
-        }
+    const animate = (timestamp: number) => {
+      if (lastTimestamp !== null) {
+        const deltaTime = timestamp - lastTimestamp; // milliseconds
+        const pixelsPerSecond = scrollSpeed * CARD_SPACING; // cards/sec * pixels/card
+        const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
 
-        return newY;
-      });
-    }, 16); // ~60 FPS
+        setScrollY((prev) => {
+          const newY = prev + pixelsToScroll;
 
-    return () => clearInterval(interval);
+          // Reset to top when reaching bottom
+          if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
+            return 0;
+          }
+
+          return newY;
+        });
+      }
+
+      lastTimestamp = timestamp;
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
   }, [inhibitAutoScroll, scrollSpeed]);
 
   return (
