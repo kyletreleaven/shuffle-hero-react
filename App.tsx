@@ -21,9 +21,105 @@ type Note = {
 type MenuPanelProps = {
   visible: boolean;
   onClose: () => void;
+  numberOfCards: number;
+  setNumberOfCards: (value: number) => void;
+  numberOfLanes: number;
+  setNumberOfLanes: (value: number) => void;
+  scrollSpeed: number;
+  setScrollSpeed: (value: number) => void;
 };
 
-function MenuPanel({ visible, onClose }: MenuPanelProps) {
+type NumberOfCardsControlProps = {
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function NumberOfCardsControl({ value, onChange }: NumberOfCardsControlProps) {
+  return (
+    <View style={styles.settingControl}>
+      <Text style={styles.settingLabel}>Number of Cards</Text>
+      <View style={styles.settingButtons}>
+        <TouchableOpacity
+          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.max(1, value - 10))}
+          disabled={value <= 1}
+        >
+          <Text style={styles.settingButtonText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.settingValue}>{value}</Text>
+        <TouchableOpacity
+          style={[styles.settingButton, value >= 200 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.min(200, value + 10))}
+          disabled={value >= 200}
+        >
+          <Text style={styles.settingButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+type NumberOfLanesControlProps = {
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function NumberOfLanesControl({ value, onChange }: NumberOfLanesControlProps) {
+  return (
+    <View style={styles.settingControl}>
+      <Text style={styles.settingLabel}>Number of Lanes</Text>
+      <View style={styles.settingButtons}>
+        <TouchableOpacity
+          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.max(1, value - 1))}
+          disabled={value <= 1}
+        >
+          <Text style={styles.settingButtonText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.settingValue}>{value}</Text>
+        <TouchableOpacity
+          style={[styles.settingButton, value >= 8 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.min(8, value + 1))}
+          disabled={value >= 8}
+        >
+          <Text style={styles.settingButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+type SpeedControlProps = {
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function SpeedControl({ value, onChange }: SpeedControlProps) {
+  return (
+    <View style={styles.settingControl}>
+      <Text style={styles.settingLabel}>Speed</Text>
+      <View style={styles.settingButtons}>
+        <TouchableOpacity
+          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.max(1, value - 1))}
+          disabled={value <= 1}
+        >
+          <Text style={styles.settingButtonText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.settingValue}>{value}</Text>
+        <TouchableOpacity
+          style={[styles.settingButton, value >= 10 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.min(10, value + 1))}
+          disabled={value >= 10}
+        >
+          <Text style={styles.settingButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed }: MenuPanelProps) {
   return (
     <Modal
       visible={visible}
@@ -34,6 +130,21 @@ function MenuPanel({ visible, onClose }: MenuPanelProps) {
       <View style={styles.overlay}>
         <View style={styles.menuPanel}>
           <Text style={styles.menuTitle}>Options Menu</Text>
+
+          <NumberOfCardsControl
+            value={numberOfCards}
+            onChange={setNumberOfCards}
+          />
+
+          <NumberOfLanesControl
+            value={numberOfLanes}
+            onChange={setNumberOfLanes}
+          />
+
+          <SpeedControl
+            value={scrollSpeed}
+            onChange={setScrollSpeed}
+          />
 
           <TouchableOpacity
             style={styles.closeButton}
@@ -56,23 +167,28 @@ export default function App() {
   const [scrollY, setScrollY] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Game settings
+  const [numberOfCards, setNumberOfCards] = useState(NOTE_COUNT);
+  const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
+  const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+
   const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
 
   // Generate random notes
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
-    for (let i = 0; i < NOTE_COUNT; i++) {
-      const lane = Math.floor(Math.random() * LANE_COUNT);
+    for (let i = 0; i < numberOfCards; i++) {
+      const lane = Math.floor(Math.random() * numberOfLanes);
       generatedNotes.push({
         id: i,
         lane,
         position: Math.random() * (TRACK_HEIGHT - 100) + 50,
-        color: NOTE_COLORS[lane],
+        color: NOTE_COLORS[lane % NOTE_COLORS.length],
       });
     }
     return generatedNotes;
-  }, []);
+  }, [numberOfCards, numberOfLanes]);
 
   useEffect(() => {
     // Lock to landscape mode but allow both orientations
@@ -96,7 +212,7 @@ export default function App() {
 
     const interval = setInterval(() => {
       setScrollY((prev) => {
-        const newY = prev + SCROLL_SPEED;
+        const newY = prev + scrollSpeed;
 
         // Reset to top when reaching bottom
         if (newY >= TRACK_HEIGHT - Dimensions.get('window').height) {
@@ -106,9 +222,9 @@ export default function App() {
         return newY;
       });
     }, 16); // ~60 FPS
-    
+
     return () => clearInterval(interval);
-  }, [inhibitAutoScroll]);
+  }, [inhibitAutoScroll, scrollSpeed]);
 
   return (
     <View style={styles.container}>
@@ -139,13 +255,13 @@ export default function App() {
       >
         <View style={styles.track}>
           {/* Render vertical lanes */}
-          {Array.from({ length: LANE_COUNT }).map((_, index) => (
+          {Array.from({ length: numberOfLanes }).map((_, index) => (
             <View key={index} style={styles.lane} />
           ))}
 
           {/* Render notes */}
           {notes.map((note) => {
-            const laneWidth = Dimensions.get('window').width / LANE_COUNT;
+            const laneWidth = Dimensions.get('window').width / numberOfLanes;
             return (
               <View
                 key={note.id}
@@ -214,7 +330,16 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      <MenuPanel visible={menuVisible} onClose={() => setMenuVisible(false)} />
+      <MenuPanel
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        numberOfCards={numberOfCards}
+        setNumberOfCards={setNumberOfCards}
+        numberOfLanes={numberOfLanes}
+        setNumberOfLanes={setNumberOfLanes}
+        scrollSpeed={scrollSpeed}
+        setScrollSpeed={setScrollSpeed}
+      />
 
       <StatusBar style="auto" />
     </View>
@@ -326,11 +451,49 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     textAlign: 'center',
   },
+  settingControl: {
+    marginBottom: 20,
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333',
+  },
+  settingButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  settingButton: {
+    backgroundColor: '#007AFF',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  settingButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  settingButtonText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  settingValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    minWidth: 50,
+    textAlign: 'center',
+  },
   closeButton: {
     backgroundColor: '#FF3B30',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 10,
   },
 });
