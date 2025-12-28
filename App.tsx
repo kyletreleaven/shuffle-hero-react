@@ -373,7 +373,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => {/* TODO: Restart Round */}}
+          onPress={() => setScrollY(TRACK_HEIGHT - Dimensions.get('window').height)}
         >
           <Text style={styles.buttonText}>Restart</Text>
         </TouchableOpacity>
