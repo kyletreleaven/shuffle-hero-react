@@ -142,12 +142,19 @@ function SpeedControl({ value, onChange }: SpeedControlProps) {
         style={styles.slider}
         minimumValue={0}
         maximumValue={3}
+        step={0.1}
         value={value}
         onValueChange={onChange}
         minimumTrackTintColor="#007AFF"
         maximumTrackTintColor="#555"
         thumbTintColor="#007AFF"
       />
+      <View style={styles.sliderNotches}>
+        <Text style={styles.sliderNotchText}>0</Text>
+        <Text style={styles.sliderNotchText}>1</Text>
+        <Text style={styles.sliderNotchText}>2</Text>
+        <Text style={styles.sliderNotchText}>3</Text>
+      </View>
     </View>
   );
 }
@@ -613,6 +620,17 @@ const styles = StyleSheet.create({
   },
   slider: {
     width: '100%',
-    height: 40,
+    height: 60,
+  },
+  sliderNotches: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    marginTop: -8,
+  },
+  sliderNotchText: {
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
