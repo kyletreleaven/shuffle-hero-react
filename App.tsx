@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import Slider from '@react-native-community/slider';
 
 const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
@@ -132,24 +133,20 @@ type SpeedControlProps = {
 function SpeedControl({ value, onChange }: SpeedControlProps) {
   return (
     <View style={styles.settingControl}>
-      <Text style={styles.settingLabel}>Speed</Text>
-      <View style={styles.settingButtons}>
-        <TouchableOpacity
-          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.max(1, value - 1))}
-          disabled={value <= 1}
-        >
-          <Text style={styles.settingButtonText}>−</Text>
-        </TouchableOpacity>
-        <Text style={styles.settingValue}>{value}</Text>
-        <TouchableOpacity
-          style={[styles.settingButton, value >= 10 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.min(10, value + 1))}
-          disabled={value >= 10}
-        >
-          <Text style={styles.settingButtonText}>+</Text>
-        </TouchableOpacity>
+      <View style={styles.sliderHeader}>
+        <Text style={styles.settingLabel}>Speed</Text>
+        <Text style={styles.sliderValue}>{value.toFixed(1)}</Text>
       </View>
+      <Slider
+        style={styles.slider}
+        minimumValue={0}
+        maximumValue={3}
+        value={value}
+        onValueChange={onChange}
+        minimumTrackTintColor="#007AFF"
+        maximumTrackTintColor="#555"
+        thumbTintColor="#007AFF"
+      />
     </View>
   );
 }
@@ -588,5 +585,20 @@ const styles = StyleSheet.create({
   presetButtonTextSelected: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sliderValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
   },
 });
