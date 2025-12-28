@@ -217,6 +217,7 @@ export default function App() {
   // Game settings
   const [numberOfCards, setNumberOfCards] = useState(NOTE_COUNT);
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
+  const [currentRound, setCurrentRound] = useState(0);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [shuffleKey, setShuffleKey] = useState(0);
 
@@ -226,6 +227,25 @@ export default function App() {
     ShuffleUtil.shuffle(perm);
     return perm;
   }, [numberOfCards, shuffleKey]);
+
+  const shuffle = useMemo(() => {
+
+    const rounds = ShuffleUtil.computeStackShuffleRounds(permutation, numberOfLanes, true);
+    const nRounds = rounds.length;
+
+    const seqs = [ShuffleUtil.invertPerm(permutation)];
+
+    for (let r = 1; r < nRounds; r++) {
+      const piles = ShuffleUtil.createPiles(numberOfLanes);
+      ShuffleUtil.dealStacks(seqs[r - 1], rounds[r], piles);
+      seqs.push(ShuffleUtil.collectPiles(piles));
+    }
+
+    return {rounds, seqs};
+
+    // TODO: reset current round to zero
+
+  }, [permutation, numberOfLanes]);
 
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
@@ -243,7 +263,9 @@ export default function App() {
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
     for (let i = 0; i < numberOfCards; i++) {
-      const lane = i % numberOfLanes;
+      // const lane = i % numberOfLanes;
+      const face = shuffle.seqs[currentRound][i];
+      const lane = shuffle.rounds[currentRound][face];
       generatedNotes.push({
         id: i,
         lane,
