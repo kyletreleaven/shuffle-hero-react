@@ -9,6 +9,7 @@ const NOTE_COUNT = 50; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const CARD_SPACING = 100; // Vertical spacing between cards
 const BOTTOM_PADDING_SECONDS = 1.5; // Seconds of track at bottom
+const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -354,15 +355,17 @@ export default function App() {
       </ScrollView>
 
       {/* Debug HUD */}
-      <View style={styles.debugHUD}>
-        <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>isRegularScrolling: {isRegularScrolling ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>isMomentumScrolling: {isMomentumScrolling ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>isScrolling: {isScrolling ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>awaitingMomentum: {awaitingMomentumScroll ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>inhibitAutoScroll: {inhibitAutoScroll ? '✓' : '✗'}</Text>
-        <Text style={styles.debugText}>scrollY: {Math.round(scrollY)}</Text>
-      </View>
+      {SHOW_DEBUG_HUD && (
+        <View style={styles.debugHUD}>
+          <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>isRegularScrolling: {isRegularScrolling ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>isMomentumScrolling: {isMomentumScrolling ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>isScrolling: {isScrolling ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>awaitingMomentum: {awaitingMomentumScroll ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>inhibitAutoScroll: {inhibitAutoScroll ? '✓' : '✗'}</Text>
+          <Text style={styles.debugText}>scrollY: {Math.round(scrollY)}</Text>
+        </View>
+      )}
 
       {/* Bottom button row */}
       <View style={styles.bottomButtonRow}>
