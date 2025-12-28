@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 const TRACK_HEIGHT = 3000; // Extra tall for scrolling
@@ -370,6 +370,12 @@ export default function App() {
           onPress={() => {/* TODO: Next Round */}}
         >
           <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.bottomButton, { marginLeft: 'auto' }]}
+          onPress={() => BackHandler.exitApp()}
+        >
+          <Text style={styles.buttonText}>Exit</Text>
         </TouchableOpacity>
       </View>
 
