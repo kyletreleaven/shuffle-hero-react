@@ -129,29 +129,35 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
     >
       <View style={styles.overlay}>
         <View style={styles.menuPanel}>
-          <Text style={styles.menuTitle}>Options Menu</Text>
-
-          <NumberOfCardsControl
-            value={numberOfCards}
-            onChange={setNumberOfCards}
-          />
-
-          <NumberOfLanesControl
-            value={numberOfLanes}
-            onChange={setNumberOfLanes}
-          />
-
-          <SpeedControl
-            value={scrollSpeed}
-            onChange={setScrollSpeed}
-          />
-
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
+          <ScrollView
+            style={styles.menuScrollView}
+            contentContainerStyle={styles.menuScrollContent}
+            showsVerticalScrollIndicator={true}
           >
-            <Text style={styles.buttonText}>Close Menu</Text>
-          </TouchableOpacity>
+            <Text style={styles.menuTitle}>Options Menu</Text>
+
+            <NumberOfCardsControl
+              value={numberOfCards}
+              onChange={setNumberOfCards}
+            />
+
+            <NumberOfLanesControl
+              value={numberOfLanes}
+              onChange={setNumberOfLanes}
+            />
+
+            <SpeedControl
+              value={scrollSpeed}
+              onChange={setScrollSpeed}
+            />
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+            >
+              <Text style={styles.buttonText}>Close Menu</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -429,13 +435,24 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   menuPanel: {
-    flex: 1,
+    width: '60%',
+    maxWidth: 500,
+    height: '80%',
     backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+  },
+  menuScrollView: {
+    flex: 1,
+  },
+  menuScrollContent: {
     padding: 40,
     justifyContent: 'center',
+    minHeight: '100%',
   },
   menuTitle: {
     fontSize: 24,
