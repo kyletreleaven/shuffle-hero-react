@@ -4,11 +4,11 @@ import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 
-const TRACK_HEIGHT = 3000; // Extra tall for scrolling
 const LANE_COUNT = 4;
 const NOTE_COUNT = 50; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const CARD_SPACING = 100; // Vertical spacing between cards
+const BOTTOM_PADDING_SECONDS = 1.5; // Seconds of track at bottom
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
@@ -210,13 +210,21 @@ export default function App() {
   const [isRegularScrolling, setIsRegularScrolling] = useState(false);
   const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
   const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
-  const [scrollY, setScrollY] = useState(TRACK_HEIGHT - Dimensions.get('window').height);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Game settings
   const [numberOfCards, setNumberOfCards] = useState(NOTE_COUNT);
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+
+  // Calculate track dimensions
+  const windowHeight = Dimensions.get('window').height;
+  const topPadding = windowHeight; // 1 screen of space at top
+  const bottomPadding = BOTTOM_PADDING_SECONDS * SCROLL_SPEED * CARD_SPACING; // 1.5 seconds worth
+  const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
+  const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
+
+  const [scrollY, setScrollY] = useState(trackHeight - windowHeight);
 
   const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
@@ -229,17 +237,22 @@ export default function App() {
       generatedNotes.push({
         id: i,
         lane,
-        position: TRACK_HEIGHT - (i * CARD_SPACING + 100),
+        position: firstCardPosition - (i * CARD_SPACING),
         color: NOTE_COLORS[lane % NOTE_COLORS.length],
       });
     }
     return generatedNotes;
-  }, [numberOfCards, numberOfLanes]);
+  }, [numberOfCards, numberOfLanes, firstCardPosition]);
 
   useEffect(() => {
     // Lock to landscape mode but allow both orientations
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
+
+  // Reset scroll position when number of cards changes
+  useEffect(() => {
+    setScrollY(trackHeight - windowHeight);
+  }, [numberOfCards, trackHeight, windowHeight]);
 
   // Sync state to ScrollView only during auto-scroll (not manual interaction)
   useEffect(() => {
@@ -312,7 +325,7 @@ export default function App() {
           setIsMomentumScrolling(false);
         }}
       >
-        <View style={styles.track}>
+        <View style={[styles.track, { height: trackHeight }]}>
           {/* Render vertical lanes */}
           {Array.from({ length: numberOfLanes }).map((_, index) => (
             <View key={index} style={styles.lane} />
@@ -373,7 +386,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => setScrollY(TRACK_HEIGHT - Dimensions.get('window').height)}
+          onPress={() => setScrollY(trackHeight - windowHeight)}
         >
           <Text style={styles.buttonText}>Restart</Text>
         </TouchableOpacity>
@@ -427,7 +440,6 @@ const styles = StyleSheet.create({
   },
   track: {
     width: Dimensions.get('window').width,
-    height: TRACK_HEIGHT,
     backgroundColor: '#2a2a2a',
     flexDirection: 'row',
     borderLeftWidth: 2,
