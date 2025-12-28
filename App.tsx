@@ -21,11 +21,13 @@ type Note = {
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isTouching, setIsTouching] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [isRegularScrolling, setIsRegularScrolling] = useState(false);
+  const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
   const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
 
   // Generate random notes
@@ -88,21 +90,22 @@ export default function App() {
         showsVerticalScrollIndicator={false}
         onTouchStart={() => setIsTouching(true)}
         onTouchEnd={() => setIsTouching(false)}
-        onScrollBeginDrag={() => setIsScrolling(true)}
+        onScrollBeginDrag={() => setIsRegularScrolling(true)}
         onScrollEndDrag={(event) => {
           setScrollY(event.nativeEvent.contentOffset.y);
-          setIsScrolling(false);
+          setIsTouching(false);  // Finger lifted
+          setIsRegularScrolling(false);
           setAwaitingMomentumScroll(true);
           const timeoutId = setTimeout(() => {
             setAwaitingMomentumScroll(false);
           }, 50);
         }}
         onMomentumScrollBegin={() => {
-          setIsScrolling(true);
+          setIsMomentumScrolling(true);
         }}
         onMomentumScrollEnd={(event) => {
           setScrollY(event.nativeEvent.contentOffset.y);
-          setIsScrolling(false);
+          setIsMomentumScrolling(false);
         }}
       >
         <View style={styles.track}>
@@ -134,6 +137,8 @@ export default function App() {
       {/* Debug HUD */}
       <View style={styles.debugHUD}>
         <Text style={styles.debugText}>isTouching: {isTouching ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>isRegularScrolling: {isRegularScrolling ? '✓' : '✗'}</Text>
+        <Text style={styles.debugText}>isMomentumScrolling: {isMomentumScrolling ? '✓' : '✗'}</Text>
         <Text style={styles.debugText}>isScrolling: {isScrolling ? '✓' : '✗'}</Text>
         <Text style={styles.debugText}>awaitingMomentum: {awaitingMomentumScroll ? '✓' : '✗'}</Text>
         <Text style={styles.debugText}>inhibitAutoScroll: {inhibitAutoScroll ? '✓' : '✗'}</Text>
