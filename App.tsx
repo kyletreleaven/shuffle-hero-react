@@ -41,18 +41,32 @@ function NumberOfCardsControl({ value, onChange }: NumberOfCardsControlProps) {
       <View style={styles.settingButtons}>
         <TouchableOpacity
           style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.max(1, value - 10))}
+          onPress={() => onChange(Math.max(1, value - 5))}
           disabled={value <= 1}
         >
-          <Text style={styles.settingButtonText}>−</Text>
+          <Text style={styles.settingButtonText}>-5</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.settingButton, value <= 1 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.max(1, value - 1))}
+          disabled={value <= 1}
+        >
+          <Text style={styles.settingButtonText}>-1</Text>
         </TouchableOpacity>
         <Text style={styles.settingValue}>{value}</Text>
         <TouchableOpacity
           style={[styles.settingButton, value >= 200 && styles.settingButtonDisabled]}
-          onPress={() => onChange(Math.min(200, value + 10))}
+          onPress={() => onChange(Math.min(200, value + 1))}
           disabled={value >= 200}
         >
-          <Text style={styles.settingButtonText}>+</Text>
+          <Text style={styles.settingButtonText}>+1</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.settingButton, value >= 200 && styles.settingButtonDisabled]}
+          onPress={() => onChange(Math.min(200, value + 5))}
+          disabled={value >= 200}
+        >
+          <Text style={styles.settingButtonText}>+5</Text>
         </TouchableOpacity>
       </View>
     </View>
