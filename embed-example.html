@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shuffle Hero - Embedded Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .iframe-wrapper {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            /* 16:9 aspect ratio - adjust as needed */
+            padding-bottom: 56.25%;
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .instructions {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .instructions h2 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        .instructions p {
+            margin: 10px 0;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .instructions code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+
+            .iframe-wrapper {
+                /* Taller aspect ratio for mobile */
+                padding-bottom: 75%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 Shuffle Hero</h1>
+        <p class="subtitle">Guitar Hero-style shuffle trainer for card magic</p>
+
+        <div class="iframe-wrapper">
+            <!--
+                IMPORTANT: Replace this URL with your deployed app URL
+                For local testing with dev server: http://localhost:19006
+                For local testing with production build: http://localhost:8080
+                For production, use: https://your-deployed-url.com
+            -->
+            <iframe
+                src="http://localhost:8080"
+                allow="accelerometer; gyroscope"
+                allowfullscreen
+                title="Shuffle Hero Game"
+            ></iframe>
+        </div>
+
+        <div class="instructions">
+            <h2>📋 How to Use This Embed</h2>
+            <p><strong>For local testing (dev mode):</strong></p>
+            <ol>
+                <li>Run <code>npm run web</code> in your shuffle-hero-react directory</li>
+                <li>Open this HTML file in your browser</li>
+                <li>Change iframe src to <code>http://localhost:19006</code></li>
+            </ol>
+
+            <p><strong>For local testing (production build):</strong></p>
+            <ol>
+                <li>Build: <code>npm run build:web</code></li>
+                <li>Serve: <code>npx serve dist -l 8080</code></li>
+                <li>Open this HTML file in your browser</li>
+            </ol>
+
+            <p><strong>For production deployment:</strong></p>
+            <ol>
+                <li>Build your app: <code>npm run build:web</code></li>
+                <li>Deploy the <code>dist/</code> folder to hosting (Netlify, Vercel, etc.)</li>
+                <li>Replace the iframe <code>src</code> URL with your deployed URL</li>
+            </ol>
+
+            <p><strong>Tips:</strong></p>
+            <ul>
+                <li>The app works best in <strong>landscape mode</strong> on wider screens</li>
+                <li>Recommended minimum width: <strong>800px</strong></li>
+                <li>Touch the lanes to interact, or use the menu (≡) for settings</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

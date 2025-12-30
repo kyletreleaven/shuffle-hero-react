@@ -16,14 +16,28 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.anonymous.shuffleheroreact",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": []
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Shuffle Hero",
+      "shortName": "ShuffleHero",
+      "description": "Guitar Hero-style shuffle trainer for card magic practice",
+      "backgroundColor": "#1a1a1a",
+      "themeColor": "#007AFF",
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "shuffle-hero-react"
+      }
     }
   }
 }

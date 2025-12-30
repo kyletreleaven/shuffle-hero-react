@@ -6,7 +6,10 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:web": "expo export --platform web",
+    "build:android": "cd android && ./gradlew assembleRelease",
+    "build:android:bundle": "cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-community/slider": "^5.1.1",
@@ -14,7 +17,9 @@
     "expo-screen-orientation": "^9.0.8",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "^0.21.0"
   },
   "private": true,
   "devDependencies": {
