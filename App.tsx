@@ -316,6 +316,7 @@ function AutoScrollView({
 
     let animationFrameId: number;
     let lastTimestamp: number | null = null;
+    let currentScrollY = scrollY;
 
     const animate = (timestamp: number) => {
       if (lastTimestamp !== null) {
@@ -323,7 +324,8 @@ function AutoScrollView({
         const pixelsPerSecond = scrollSpeed * CARD_SPACING;
         const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
 
-        onScrollYChange(Math.max(0, scrollY - pixelsToScroll));
+        currentScrollY = Math.max(0, currentScrollY - pixelsToScroll);
+        onScrollYChange(currentScrollY);
       }
 
       lastTimestamp = timestamp;
