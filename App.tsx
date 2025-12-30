@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import * as ShuffleUtil from './ShuffleUtil';
@@ -128,6 +128,69 @@ function NumberOfLanesControl({ value, onChange }: NumberOfLanesControlProps) {
   );
 }
 
+type CrossPlatformSliderProps = {
+  value: number;
+  minimumValue: number;
+  maximumValue: number;
+  step: number;
+  onValueChange: (value: number) => void;
+  minimumTrackTintColor?: string;
+  maximumTrackTintColor?: string;
+  thumbTintColor?: string;
+  style?: any;
+};
+
+/**
+ * Cross-platform slider component that works on both web and native.
+ * On web, uses HTML5 input[type="range"] for proper mouse support.
+ * On native, uses @react-native-community/slider.
+ */
+function CrossPlatformSlider({
+  value,
+  minimumValue,
+  maximumValue,
+  step,
+  onValueChange,
+  minimumTrackTintColor = '#007AFF',
+  maximumTrackTintColor = '#555',
+  thumbTintColor = '#007AFF',
+  style,
+}: CrossPlatformSliderProps) {
+  if (Platform.OS === 'web') {
+    return (
+      <input
+        type="range"
+        min={minimumValue}
+        max={maximumValue}
+        step={step}
+        value={value}
+        onChange={(e) => onValueChange(parseFloat((e.target as HTMLInputElement).value))}
+        style={{
+          width: '100%',
+          height: 40,
+          cursor: 'pointer',
+          accentColor: minimumTrackTintColor,
+          ...StyleSheet.flatten(style),
+        }}
+      />
+    );
+  }
+
+  return (
+    <Slider
+      style={style}
+      minimumValue={minimumValue}
+      maximumValue={maximumValue}
+      step={step}
+      value={value}
+      onValueChange={onValueChange}
+      minimumTrackTintColor={minimumTrackTintColor}
+      maximumTrackTintColor={maximumTrackTintColor}
+      thumbTintColor={thumbTintColor}
+    />
+  );
+}
+
 type SpeedControlProps = {
   value: number;
   onChange: (value: number) => void;
@@ -140,7 +203,7 @@ function SpeedControl({ value, onChange }: SpeedControlProps) {
         <Text style={styles.settingLabel}>Speed (cards/sec)</Text>
         <Text style={styles.sliderValue}>{value.toFixed(1)}</Text>
       </View>
-      <Slider
+      <CrossPlatformSlider
         style={styles.slider}
         minimumValue={0}
         maximumValue={3}
