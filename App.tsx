@@ -299,6 +299,12 @@ function AutoScrollView({
   } = state;
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(scrollY);
+
+  // Update ref when scrollY changes externally
+  useEffect(() => {
+    scrollYRef.current = scrollY;
+  }, [scrollY]);
 
   // Sync scrollY to ScrollView during autoscroll
   useEffect(() => {
@@ -316,7 +322,6 @@ function AutoScrollView({
 
     let animationFrameId: number;
     let lastTimestamp: number | null = null;
-    let currentScrollY = scrollY;
 
     const animate = (timestamp: number) => {
       if (lastTimestamp !== null) {
@@ -324,8 +329,9 @@ function AutoScrollView({
         const pixelsPerSecond = scrollSpeed * CARD_SPACING;
         const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
 
-        currentScrollY = Math.max(0, currentScrollY - pixelsToScroll);
-        onScrollYChange(currentScrollY);
+        const newScrollY = Math.max(0, scrollYRef.current - pixelsToScroll);
+        scrollYRef.current = newScrollY;
+        onScrollYChange(newScrollY);
       }
 
       lastTimestamp = timestamp;
