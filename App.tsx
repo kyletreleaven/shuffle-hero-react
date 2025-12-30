@@ -334,7 +334,7 @@ function AutoScrollView({
 
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [inhibitAutoScroll, scrollSpeed, scrollY, onScrollYChange]);
+  }, [inhibitAutoScroll, scrollSpeed]);
 
   return (
     <ScrollView
