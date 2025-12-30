@@ -224,6 +224,143 @@ function SpeedControl({ value, onChange }: SpeedControlProps) {
   );
 }
 
+type AutoScrollViewState = {
+  isTouching: boolean;
+  setIsTouching: (value: boolean) => void;
+  isRegularScrolling: boolean;
+  setIsRegularScrolling: (value: boolean) => void;
+  isMomentumScrolling: boolean;
+  setIsMomentumScrolling: (value: boolean) => void;
+  awaitingMomentumScroll: boolean;
+  setAwaitingMomentumScroll: (value: boolean) => void;
+  isScrolling: boolean;
+  inhibitAutoScroll: boolean;
+};
+
+/**
+ * Hook to manage AutoScrollView state.
+ * Returns all the state values and setters needed for autoscroll functionality.
+ */
+function useAutoScrollViewState(): AutoScrollViewState {
+  const [isTouching, setIsTouching] = useState(false);
+  const [isRegularScrolling, setIsRegularScrolling] = useState(false);
+  const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
+  const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
+
+  const isScrolling = isRegularScrolling || isMomentumScrolling;
+  const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
+
+  return {
+    isTouching,
+    setIsTouching,
+    isRegularScrolling,
+    setIsRegularScrolling,
+    isMomentumScrolling,
+    setIsMomentumScrolling,
+    awaitingMomentumScroll,
+    setAwaitingMomentumScroll,
+    isScrolling,
+    inhibitAutoScroll,
+  };
+}
+
+type AutoScrollViewProps = {
+  style?: any;
+  contentContainerStyle?: any;
+  showsVerticalScrollIndicator?: boolean;
+  scrollSpeed: number;
+  scrollY: number;
+  onScrollYChange: (y: number) => void;
+  children: React.ReactNode;
+  state: AutoScrollViewState;
+};
+
+/**
+ * ScrollView component with built-in autoscroll functionality.
+ * Manages scroll state and automatically scrolls at the specified speed,
+ * pausing when user is interacting (touching, dragging, or momentum scrolling).
+ */
+function AutoScrollView({
+  style,
+  contentContainerStyle,
+  showsVerticalScrollIndicator = false,
+  scrollSpeed,
+  scrollY,
+  onScrollYChange,
+  children,
+  state,
+}: AutoScrollViewProps) {
+  const {
+    setIsTouching,
+    setIsRegularScrolling,
+    setIsMomentumScrolling,
+    setAwaitingMomentumScroll,
+    inhibitAutoScroll,
+  } = state;
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Sync scrollY to ScrollView during autoscroll
+  useEffect(() => {
+    if (!inhibitAutoScroll && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: scrollY,
+        animated: false,
+      });
+    }
+  }, [scrollY, inhibitAutoScroll]);
+
+  // Autoscroll effect
+  useEffect(() => {
+    if (inhibitAutoScroll || scrollSpeed === 0) return;
+
+    let animationFrameId: number;
+    let lastTimestamp: number | null = null;
+
+    const animate = (timestamp: number) => {
+      if (lastTimestamp !== null) {
+        const deltaTime = timestamp - lastTimestamp;
+        const pixelsPerSecond = scrollSpeed * CARD_SPACING;
+        const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
+
+        onScrollYChange(Math.max(0, scrollY - pixelsToScroll));
+      }
+
+      lastTimestamp = timestamp;
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [inhibitAutoScroll, scrollSpeed, scrollY, onScrollYChange]);
+
+  return (
+    <ScrollView
+      ref={scrollViewRef}
+      style={style}
+      contentContainerStyle={contentContainerStyle}
+      showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+      onTouchStart={() => setIsTouching(true)}
+      onTouchEnd={() => setIsTouching(false)}
+      onScrollBeginDrag={() => setIsRegularScrolling(true)}
+      onScrollEndDrag={(event) => {
+        onScrollYChange(event.nativeEvent.contentOffset.y);
+        setIsTouching(false);
+        setIsRegularScrolling(false);
+        setAwaitingMomentumScroll(true);
+        setTimeout(() => setAwaitingMomentumScroll(false), 50);
+      }}
+      onMomentumScrollBegin={() => setIsMomentumScrolling(true)}
+      onMomentumScrollEnd={(event) => {
+        onScrollYChange(event.nativeEvent.contentOffset.y);
+        setIsMomentumScrolling(false);
+      }}
+    >
+      {children}
+    </ScrollView>
+  );
+}
+
 function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed }: MenuPanelProps) {
   return (
     <Modal
@@ -272,11 +409,10 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
 
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
-  const [isTouching, setIsTouching] = useState(false);
-  const [isRegularScrolling, setIsRegularScrolling] = useState(false);
-  const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
-  const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Autoscroll state management
+  const autoScrollState = useAutoScrollViewState();
+  const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, inhibitAutoScroll } = autoScrollState;
 
   // Game settings
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
@@ -344,9 +480,6 @@ export default function App() {
 
   const [scrollY, setScrollY] = useState(trackHeight - windowHeight);
 
-  const isScrolling = isRegularScrolling || isMomentumScrolling;
-  const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
-
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
@@ -374,76 +507,16 @@ export default function App() {
     setScrollY(trackHeight - windowHeight);
   }, [numberOfCards, currentRound, trackHeight, windowHeight]);
 
-  // Sync state to ScrollView only during auto-scroll (not manual interaction)
-  useEffect(() => {
-    if (!inhibitAutoScroll && scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: scrollY,
-        animated: false,
-      });
-    }
-  }, [scrollY, inhibitAutoScroll]);
-
-  // Auto-scroll effect - updates state when not touching AND not scrolling
-  useEffect(() => {
-    if (inhibitAutoScroll) return;
-
-    let animationFrameId: number;
-    let lastTimestamp: number | null = null;
-
-    const animate = (timestamp: number) => {
-      if (lastTimestamp !== null) {
-        const deltaTime = timestamp - lastTimestamp; // milliseconds
-        const pixelsPerSecond = scrollSpeed * CARD_SPACING; // cards/sec * pixels/card
-        const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
-
-        setScrollY((prev) => {
-          const newY = prev - pixelsToScroll;
-
-          // Stop at top
-          if (newY <= 0) {
-            return 0;
-          }
-
-          return newY;
-        });
-      }
-
-      lastTimestamp = timestamp;
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animationFrameId = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [inhibitAutoScroll, scrollSpeed]);
-
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
+      <AutoScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        onTouchStart={() => setIsTouching(true)}
-        onTouchEnd={() => setIsTouching(false)}
-        onScrollBeginDrag={() => setIsRegularScrolling(true)}
-        onScrollEndDrag={(event) => {
-          setScrollY(event.nativeEvent.contentOffset.y);
-          setIsTouching(false);  // Finger lifted
-          setIsRegularScrolling(false);
-          setAwaitingMomentumScroll(true);
-          const timeoutId = setTimeout(() => {
-            setAwaitingMomentumScroll(false);
-          }, 50);
-        }}
-        onMomentumScrollBegin={() => {
-          setIsMomentumScrolling(true);
-        }}
-        onMomentumScrollEnd={(event) => {
-          setScrollY(event.nativeEvent.contentOffset.y);
-          setIsMomentumScrolling(false);
-        }}
+        scrollSpeed={scrollSpeed}
+        scrollY={scrollY}
+        onScrollYChange={setScrollY}
+        state={autoScrollState}
       >
         <View style={[styles.track, { height: trackHeight }]}>
           {/* Render vertical lanes */}
@@ -471,7 +544,7 @@ export default function App() {
             );
           })}
         </View>
-      </ScrollView>
+      </AutoScrollView>
 
       {/* Time Remaining Display */}
       <View style={styles.timeDisplay}>
