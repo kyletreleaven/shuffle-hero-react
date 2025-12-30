@@ -447,11 +447,13 @@ export default function App() {
   const reShuffle = (n?: number) => {
     const perm = samplePermutation(n ?? numberOfCards);
     setShuffleState({ permutation: perm, currentRound: 0 });
+    setScrollY(trackHeight - windowHeight);
   };
 
   const reverse = () => {
     const invertedPerm = ShuffleUtil.invertPerm(permutation);
     setShuffleState({ permutation: invertedPerm, currentRound: 0 });
+    setScrollY(trackHeight - windowHeight);
   };
 
   const setNumberOfCards = (n: number) => {
@@ -509,11 +511,6 @@ export default function App() {
     // Lock to landscape mode but allow both orientations
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
-
-  // Reset scroll position when number of cards or round changes
-  useEffect(() => {
-    setScrollY(trackHeight - windowHeight);
-  }, [numberOfCards, currentRound, trackHeight, windowHeight]);
 
   return (
     <View style={styles.container}>
@@ -608,13 +605,19 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => setCurrentRound(Math.max(0, currentRound - 1))}
+          onPress={() => {
+            setCurrentRound(Math.max(0, currentRound - 1));
+            setScrollY(trackHeight - windowHeight);
+          }}
         >
           <Text style={styles.buttonText}>Prev</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => setCurrentRound(Math.min(numberOfRounds - 1, currentRound + 1))}
+          onPress={() => {
+            setCurrentRound(Math.min(numberOfRounds - 1, currentRound + 1));
+            setScrollY(trackHeight - windowHeight);
+          }}
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
