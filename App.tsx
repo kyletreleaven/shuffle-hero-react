@@ -352,6 +352,13 @@ function AutoScrollView({
       style={style}
       contentContainerStyle={contentContainerStyle}
       showsVerticalScrollIndicator={showsVerticalScrollIndicator}
+      scrollEventThrottle={16}
+      onScroll={(event) => {
+        // Only update from scroll events during manual scrolling
+        if (inhibitAutoScroll) {
+          onScrollYChange(event.nativeEvent.contentOffset.y);
+        }
+      }}
       onTouchStart={() => setIsTouching(true)}
       onTouchEnd={() => setIsTouching(false)}
       onScrollBeginDrag={() => setIsRegularScrolling(true)}
