@@ -611,8 +611,11 @@ export default function App() {
         <TouchableOpacity
           style={styles.bottomButton}
           onPress={() => {
-            setCurrentRound(Math.max(0, currentRound - 1));
-            setScrollY(trackHeight - windowHeight);
+            const newRound = Math.max(0, currentRound - 1);
+            if (newRound !== currentRound) {
+              setCurrentRound(newRound);
+              setScrollY(trackHeight - windowHeight);
+            }
           }}
         >
           <Text style={styles.buttonText}>Prev</Text>
@@ -620,8 +623,11 @@ export default function App() {
         <TouchableOpacity
           style={styles.bottomButton}
           onPress={() => {
-            setCurrentRound(Math.min(numberOfRounds - 1, currentRound + 1));
-            setScrollY(trackHeight - windowHeight);
+            const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
+            if (newRound !== currentRound) {
+              setCurrentRound(newRound);
+              setScrollY(trackHeight - windowHeight);
+            }
           }}
         >
           <Text style={styles.buttonText}>Next</Text>
