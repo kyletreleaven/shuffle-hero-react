@@ -331,8 +331,7 @@ function AutoScrollView({
     const animate = (timestamp: number) => {
       if (lastTimestamp !== null) {
         const deltaTime = timestamp - lastTimestamp;
-        const pixelsPerSecond = scrollSpeed * CARD_SPACING;
-        const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
+        const pixelsToScroll = (scrollSpeed * deltaTime) / 1000;
 
         const newScrollY = Math.max(0, scrollYRef.current - pixelsToScroll);
 
@@ -523,7 +522,7 @@ export default function App() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        scrollSpeed={scrollSpeed}
+        scrollSpeed={scrollSpeed * CARD_SPACING}
         scrollY={scrollY}
         onScrollYChange={setScrollY}
         state={autoScrollState}
