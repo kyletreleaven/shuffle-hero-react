@@ -301,10 +301,8 @@ function AutoScrollView({
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(scrollY);
 
-  // Update ref when scrollY changes externally
-  useEffect(() => {
-    scrollYRef.current = scrollY;
-  }, [scrollY]);
+  // Sync ref during render to avoid timing issues
+  scrollYRef.current = scrollY;
 
   // Sync scrollY to ScrollView during autoscroll
   useEffect(() => {
