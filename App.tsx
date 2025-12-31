@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -299,22 +299,29 @@ function AutoScrollView({
   } = state;
 
   const scrollViewRef = useRef<ScrollView>(null);
-  const scrollYRef = useRef(scrollY);
 
-  // Sync ref during render to avoid timing issues
-  scrollYRef.current = scrollY;
+    // Helper to scroll the view to a position
+  const scrollToY = (newY: number) => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        y: newY,
+        animated: false,
+      });
+    }
+  };
 
   // Sync scrollY to ScrollView during autoscroll
   useEffect(() => {
-    if (!inhibitAutoScroll && scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: scrollY,
-        animated: false,
-      });
+  // useLayoutEffect(() => {
+    if (!inhibitAutoScroll) {
+      scrollToY(scrollY);
     }
   }, [scrollY, inhibitAutoScroll]);
 
   // Autoscroll effect
+  const scrollYRef = useRef(scrollY);
+  scrollYRef.current = scrollY;
+
   useEffect(() => {
     if (inhibitAutoScroll || scrollSpeed === 0) return;
 
@@ -328,7 +335,7 @@ function AutoScrollView({
         const pixelsToScroll = (pixelsPerSecond * deltaTime) / 1000;
 
         const newScrollY = Math.max(0, scrollYRef.current - pixelsToScroll);
-        scrollYRef.current = newScrollY;
+
         onScrollYChange(newScrollY);
       }
 
