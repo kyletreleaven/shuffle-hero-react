@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -344,7 +344,7 @@ function AutoScrollView({
 
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [inhibitAutoScroll, scrollSpeed]);
+  }, [inhibitAutoScroll, scrollSpeed, onScrollYChange]);
 
   return (
     <ScrollView
@@ -455,9 +455,29 @@ export default function App() {
   });
   const numberOfCards = permutation.length;
 
+  // Calculate track dimensions
+  const windowHeight = Dimensions.get('window').height;
+  const topPadding = windowHeight; // 1 screen of space at top
+  const bottomPadding = BOTTOM_PADDING_SECONDS * scrollSpeed * CARD_SPACING;
+  const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
+  const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
+
+  const [trackTime, setTrackTime] = useState(0);
+
+  // Maximum track time (when scrolled to top)
+  const maxTrackTime = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
+
+  // Helper to set trackTime with clamping
+  const setTrackTimeClamped = useCallback((time: number) => {
+    setTrackTime(Math.max(0, Math.min(maxTrackTime, time)));
+  }, [maxTrackTime]);
+
+  // Derive scrollY from track time
+  const scrollY = trackHeight - windowHeight - (trackTime * scrollSpeed * CARD_SPACING);
+
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
-    setTrackTimeClamped(0);
+    setTrackTime(0); // Direct reset, no clamping needed for 0
   };
 
   // Setters that maintain invariants
@@ -487,26 +507,6 @@ export default function App() {
 
   const numberOfRounds = shuffle.rounds.length;
 
-  // Calculate track dimensions
-  const windowHeight = Dimensions.get('window').height;
-  const topPadding = windowHeight; // 1 screen of space at top
-  const bottomPadding = BOTTOM_PADDING_SECONDS * scrollSpeed * CARD_SPACING;
-  const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
-  const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
-
-  const [trackTime, setTrackTime] = useState(0);
-
-  // Maximum track time (when scrolled to top)
-  const maxTrackTime = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
-
-  // Helper to set trackTime with clamping
-  const setTrackTimeClamped = (time: number) => {
-    setTrackTime(Math.max(0, Math.min(maxTrackTime, time)));
-  };
-
-  // Derive scrollY from track time
-  const scrollY = trackHeight - windowHeight - (trackTime * scrollSpeed * CARD_SPACING);
-
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
@@ -530,10 +530,10 @@ export default function App() {
   }, []);
 
   // Convert scrollY to trackTime when manually scrolled
-  const handleScrollYChange = (newScrollY: number) => {
+  const handleScrollYChange = useCallback((newScrollY: number) => {
     const newTrackTime = (trackHeight - windowHeight - newScrollY) / (scrollSpeed * CARD_SPACING);
     setTrackTimeClamped(newTrackTime);
-  };
+  }, [trackHeight, windowHeight, scrollSpeed, setTrackTimeClamped]);
 
   return (
     <View style={styles.container}>
