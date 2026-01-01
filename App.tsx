@@ -537,7 +537,13 @@ export default function App() {
         <View style={[styles.track, { height: trackHeight }]}>
           {/* Render vertical lanes */}
           {Array.from({ length: numberOfLanes }).map((_, index) => (
-            <View key={index} style={styles.lane} />
+            <View
+              key={index}
+              style={[
+                styles.lane,
+                { backgroundColor: index % 2 === 0 ? '#1a1a1a' : '#2a2a2a' }
+              ]}
+            />
           ))}
 
           {/* Render notes */}
