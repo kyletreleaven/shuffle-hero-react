@@ -307,14 +307,59 @@ function AutoScrollView({
   } = state;
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Helper to scroll the view to a position
+  // On web, detect mouse wheel scrolling and treat it as regular scrolling
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const handleWheel = () => {
+      // Clear any existing timeout
+      if (wheelTimeoutRef.current) {
+        clearTimeout(wheelTimeoutRef.current);
+      }
+
+      // Treat wheel scroll as regular scrolling
+      setIsRegularScrolling(true);
+
+      // Clear after user stops wheeling
+      wheelTimeoutRef.current = setTimeout(() => {
+        setIsRegularScrolling(false);
+      }, 150);
+    };
+
+    const scrollElement = scrollViewRef.current
+      ? ((scrollViewRef.current as any).getScrollableNode?.() || (scrollViewRef.current as any))
+      : null;
+
+    if (scrollElement && scrollElement.addEventListener) {
+      scrollElement.addEventListener('wheel', handleWheel, { passive: true });
+      return () => {
+        scrollElement.removeEventListener('wheel', handleWheel);
+        if (wheelTimeoutRef.current) {
+          clearTimeout(wheelTimeoutRef.current);
+        }
+      };
+    }
+  }, [setIsRegularScrolling]);
+
+  // Helper to scroll the view to a position
   const scrollToY = (newY: number) => {
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: newY,
-        animated: false,
-      });
+      if (Platform.OS === 'web') {
+        // On web, directly set scrollTop for immediate, reliable scrolling
+        const scrollElement = (scrollViewRef.current as any).getScrollableNode?.() ||
+                             (scrollViewRef.current as any);
+        if (scrollElement && typeof scrollElement.scrollTop !== 'undefined') {
+          scrollElement.scrollTop = newY;
+        }
+      } else {
+        // On native, use the standard scrollTo method
+        scrollViewRef.current.scrollTo({
+          y: newY,
+          animated: false,
+        });
+      }
     }
   };
 
