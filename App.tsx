@@ -426,6 +426,13 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
 }
 
 
+const samplePermutation = (numCards: number) => {
+  const perm = Array.from({ length: numCards }, (_, i) => i);
+  ShuffleUtil.shuffle(perm);
+  return perm;
+}
+
+
 export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -441,12 +448,6 @@ export default function App() {
     permutation: number[];
     currentRound: number;
   };
-
-  const samplePermutation = (numCards: number) => {
-    const perm = Array.from({ length: numCards }, (_, i) => i);
-    ShuffleUtil.shuffle(perm);
-    return perm;
-  }
 
   const [{permutation, currentRound}, setShuffleState] = useState<ShuffleState>(() => {
     const perm = samplePermutation(NOTE_COUNT);
