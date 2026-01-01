@@ -495,7 +495,7 @@ export default function App() {
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
   const topPadding = windowHeight; // 1 screen of space at top
-  const bottomPadding = BOTTOM_PADDING_SECONDS * SCROLL_SPEED * CARD_SPACING; // 1.5 seconds worth
+  const bottomPadding = BOTTOM_PADDING_SECONDS * scrollSpeed * CARD_SPACING;
   const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
   const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
 
