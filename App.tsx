@@ -644,6 +644,11 @@ export default function App() {
             return `Round ${currentRound + 1}/${numberOfRounds} | ${currentRoundTime.toFixed(1)}s | Total: ${totalTime.toFixed(1)}s`;
           })() : '∞'}
         </Text>
+        {SHOW_DEBUG_HUD && numberOfCards <= 40 && (
+          <Text style={styles.sequenceText}>
+            {permutation.map(n => n + 1).join(' ')}
+          </Text>
+        )}
       </View>
 
       {/* Debug HUD */}
@@ -976,5 +981,15 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.9)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  sequenceText: {
+    color: '#22c55e',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+    fontFamily: 'monospace',
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });
