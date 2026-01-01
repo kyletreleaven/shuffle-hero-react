@@ -597,25 +597,28 @@ export default function App() {
           <Text style={styles.buttonText}>Menu</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
           onPress={() => reShuffle()}
+          disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Shuffle</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
           onPress={reverse}
+          disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Reverse</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
           onPress={() => setScrollY(trackHeight - windowHeight)}
+          disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Restart</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
           onPress={() => {
             const newRound = Math.max(0, currentRound - 1);
             if (newRound !== currentRound) {
@@ -623,11 +626,12 @@ export default function App() {
               setScrollY(trackHeight - windowHeight);
             }
           }}
+          disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Prev</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.bottomButton}
+          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
           onPress={() => {
             const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
             if (newRound !== currentRound) {
@@ -635,6 +639,7 @@ export default function App() {
               setScrollY(trackHeight - windowHeight);
             }
           }}
+          disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
@@ -746,6 +751,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  bottomButtonDisabled: {
+    backgroundColor: '#555',
+    opacity: 0.5,
   },
   buttonText: {
     color: '#fff',
