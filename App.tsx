@@ -13,7 +13,15 @@ const BOTTOM_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 
 // Guitar Hero-style note colors
-const NOTE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
+const NOTE_COLORS = [
+  '#22c55e', // green
+  '#ef4444', // red
+  '#eab308', // yellow
+  '#3b82f6', // blue
+  '#f97316', // orange
+  '#a855f7', // purple
+  '#ec4899', // pink
+];
 
 type Note = {
   id: number;
