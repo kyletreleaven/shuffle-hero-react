@@ -454,23 +454,17 @@ export default function App() {
     return { permutation: perm, currentRound: 0 };
   });
   const numberOfCards = permutation.length;
-  
-  // Setters that maintain invariants
-  const reShuffle = (n?: number) => {
-    const perm = samplePermutation(n ?? numberOfCards);
+
+  const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
-    setScrollY(trackHeight - windowHeight);
+    setTrackTimeClamped(0);
   };
 
-  const reverse = () => {
-    const invertedPerm = ShuffleUtil.invertPerm(permutation);
-    setShuffleState({ permutation: invertedPerm, currentRound: 0 });
-    setScrollY(trackHeight - windowHeight);
-  };
+  // Setters that maintain invariants
+  const reShuffle = (n?: number) => setPerm(samplePermutation(n ?? numberOfCards));
+  const reverse = () => setPerm(ShuffleUtil.invertPerm(permutation));
 
-  const setNumberOfCards = (n: number) => {
-    reShuffle(n);
-  };
+  const setNumberOfCards = (n: number) => reShuffle(n);
 
   const setCurrentRound = (round: number) => {
     setShuffleState(prev => ({ ...prev, currentRound: round }));
@@ -500,7 +494,18 @@ export default function App() {
   const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
   const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
 
-  const [scrollY, setScrollY] = useState(trackHeight - windowHeight);
+  const [trackTime, setTrackTime] = useState(0);
+
+  // Maximum track time (when scrolled to top)
+  const maxTrackTime = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
+
+  // Helper to set trackTime with clamping
+  const setTrackTimeClamped = (time: number) => {
+    setTrackTime(Math.max(0, Math.min(maxTrackTime, time)));
+  };
+
+  // Derive scrollY from track time
+  const scrollY = trackHeight - windowHeight - (trackTime * scrollSpeed * CARD_SPACING);
 
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
@@ -524,6 +529,12 @@ export default function App() {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
 
+  // Convert scrollY to trackTime when manually scrolled
+  const handleScrollYChange = (newScrollY: number) => {
+    const newTrackTime = (trackHeight - windowHeight - newScrollY) / (scrollSpeed * CARD_SPACING);
+    setTrackTimeClamped(newTrackTime);
+  };
+
   return (
     <View style={styles.container}>
       <AutoScrollView
@@ -532,7 +543,7 @@ export default function App() {
         showsVerticalScrollIndicator={false}
         scrollSpeed={scrollSpeed * CARD_SPACING}
         scrollY={scrollY}
-        onScrollYChange={setScrollY}
+        onScrollYChange={handleScrollYChange}
         state={autoScrollState}
       >
         <View style={[styles.track, { height: trackHeight }]}>
@@ -619,7 +630,7 @@ export default function App() {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={() => setScrollY(trackHeight - windowHeight)}
+          onPress={() => setTrackTimeClamped(0)}
           disabled={inhibitAutoScroll}
         >
           <Text style={styles.buttonText}>Restart</Text>
@@ -630,7 +641,7 @@ export default function App() {
             const newRound = Math.max(0, currentRound - 1);
             if (newRound !== currentRound) {
               setCurrentRound(newRound);
-              setScrollY(trackHeight - windowHeight);
+              setTrackTimeClamped(0);
             }
           }}
           disabled={inhibitAutoScroll}
@@ -643,7 +654,7 @@ export default function App() {
             const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
             if (newRound !== currentRound) {
               setCurrentRound(newRound);
-              setScrollY(trackHeight - windowHeight);
+              setTrackTimeClamped(0);
             }
           }}
           disabled={inhibitAutoScroll}
