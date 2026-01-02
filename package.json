@@ -2,6 +2,7 @@
   "name": "shuffle-hero-react",
   "version": "1.0.0",
   "main": "index.js",
+  "homepage": "https://kyletreleaven.github.io/shuffle-hero-react/",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
