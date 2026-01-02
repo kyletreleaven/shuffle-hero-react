@@ -22,13 +22,13 @@ export class ScrollHelper {
   ) {
     this.scrollPixelsPerSec = scrollCardsPerSec * CARD_SPACING;
 
-    this.startPaddingPixels = START_PADDING_SECONDS * this.scrollPixelsPerSec;
+    this.startPaddingPixels = windowHeight;
     this.contentHeight = CARD_SPACING * (numberOfCards - 1);
     this.endPaddingPixels = windowHeight;
     this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
 
     this.contentStartSec = 0;
-    this.minTime = this.contentStartSec - START_PADDING_SECONDS;
+    this.minTime = this.contentStartSec - windowHeight / this.scrollPixelsPerSec;
     this.timePerRound = (this.trackHeight - windowHeight) / this.scrollPixelsPerSec;
     this.maxTime = this.minTime + this.timePerRound;
 
