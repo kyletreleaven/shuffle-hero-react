@@ -789,7 +789,10 @@ export default function App() {
         numberOfCards={numberOfCards}
         setNumberOfCards={setNumberOfCards}
         numberOfLanes={numberOfLanes}
-        setNumberOfLanes={setNumberOfLanes}
+        setNumberOfLanes={(m) => {
+          setNumberOfLanes(m);
+          resetTrackTime();
+        }}
         scrollSpeed={scrollSpeed}
         setScrollSpeed={setScrollSpeed}
       />
