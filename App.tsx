@@ -520,7 +520,8 @@ export default function App() {
   const [trackTime, setTrackTime] = useState(0);
 
   // Maximum track time (when scrolled to top)
-  const maxTrackTime = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
+  const trackSpeed = Math.max(scrollSpeed, 0.01);  // for sensible y updates while speed is zero
+  const maxTrackTime = (trackHeight - windowHeight) / (trackSpeed * CARD_SPACING);
 
   // Helper to set trackTime with clamping
   const setTrackTimeClamped = useCallback((time: number) => {
@@ -528,7 +529,7 @@ export default function App() {
   }, [maxTrackTime]);
 
   // Derive scrollY from track time
-  const scrollY = trackHeight - windowHeight - (trackTime * scrollSpeed * CARD_SPACING);
+  const scrollY = trackHeight - windowHeight - (trackTime * trackSpeed * CARD_SPACING);
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
@@ -639,9 +640,9 @@ export default function App() {
 
   // Convert scrollY to trackTime when manually scrolled
   const handleScrollYChange = useCallback((newScrollY: number) => {
-    const newTrackTime = (trackHeight - windowHeight - newScrollY) / (scrollSpeed * CARD_SPACING);
+    const newTrackTime = (trackHeight - windowHeight - newScrollY) / (trackSpeed * CARD_SPACING);
     setTrackTimeClamped(newTrackTime);
-  }, [trackHeight, windowHeight, scrollSpeed, setTrackTimeClamped]);
+  }, [trackHeight, windowHeight, trackSpeed, setTrackTimeClamped]);
 
   return (
     <View style={styles.container}>
