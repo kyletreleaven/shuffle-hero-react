@@ -510,58 +510,6 @@ export default function App() {
   });
   const numberOfCards = permutation.length;
 
-  // Load preferences on mount
-  useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        let saved: string | null = null;
-        if (Platform.OS === 'web') {
-          saved = localStorage.getItem(STORAGE_KEY);
-        } else {
-          saved = await AsyncStorage.getItem(STORAGE_KEY);
-        }
-
-        if (saved) {
-          const prefs = JSON.parse(saved);
-          if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
-          if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
-          if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
-            const perm = samplePermutation(prefs.numberOfCards);
-            setShuffleState({ permutation: perm, currentRound: 0 });
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to load preferences:', e);
-      }
-    };
-
-    loadPreferences();
-  }, []);
-
-  // Save preferences when they change
-  useEffect(() => {
-    const savePreferences = async () => {
-      try {
-        const prefs = {
-          numberOfCards,
-          numberOfLanes,
-          scrollSpeed,
-        };
-        const prefsString = JSON.stringify(prefs);
-
-        if (Platform.OS === 'web') {
-          localStorage.setItem(STORAGE_KEY, prefsString);
-        } else {
-          await AsyncStorage.setItem(STORAGE_KEY, prefsString);
-        }
-      } catch (e) {
-        console.warn('Failed to save preferences:', e);
-      }
-    };
-
-    savePreferences();
-  }, [numberOfCards, numberOfLanes, scrollSpeed]);
-
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
   const topPadding = windowHeight; // 1 screen of space at top
@@ -635,6 +583,57 @@ export default function App() {
     // Lock to landscape mode but allow both orientations
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
   }, []);
+
+  // Load preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        let saved: string | null = null;
+        if (Platform.OS === 'web') {
+          saved = localStorage.getItem(STORAGE_KEY);
+        } else {
+          saved = await AsyncStorage.getItem(STORAGE_KEY);
+        }
+
+        if (saved) {
+          const prefs = JSON.parse(saved);
+          if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
+          if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
+          if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
+            reShuffle(prefs.numberOfCards);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load preferences:', e);
+      }
+    };
+
+    loadPreferences();
+  }, []);
+
+  // Save preferences when they change
+  useEffect(() => {
+    const savePreferences = async () => {
+      try {
+        const prefs = {
+          numberOfCards,
+          numberOfLanes,
+          scrollSpeed,
+        };
+        const prefsString = JSON.stringify(prefs);
+
+        if (Platform.OS === 'web') {
+          localStorage.setItem(STORAGE_KEY, prefsString);
+        } else {
+          await AsyncStorage.setItem(STORAGE_KEY, prefsString);
+        }
+      } catch (e) {
+        console.warn('Failed to save preferences:', e);
+      }
+    };
+
+    savePreferences();
+  }, [numberOfCards, numberOfLanes, scrollSpeed]);
 
   // Convert scrollY to trackTime when manually scrolled
   const handleScrollYChange = useCallback((newScrollY: number) => {
