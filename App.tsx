@@ -565,16 +565,18 @@ export default function App() {
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
-    for (let i = 0; i < numberOfCards; i++) {
-      // const lane = i % numberOfLanes;
-      const face = shuffle.seqs[currentRound][i];
-      const lane = shuffle.rounds[currentRound][face];
-      generatedNotes.push({
-        id: i,
-        lane,
-        position: firstCardPosition - (i * CARD_SPACING),
-        color: NOTE_COLORS[lane % NOTE_COLORS.length],
-      });
+    if (currentRound < numberOfRounds) {
+      for (let i = 0; i < numberOfCards; i++) {
+        // const lane = i % numberOfLanes;
+        const face = shuffle.seqs[currentRound][i];
+        const lane = shuffle.rounds[currentRound][face];
+        generatedNotes.push({
+          id: i,
+          lane,
+          position: firstCardPosition - (i * CARD_SPACING),
+          color: NOTE_COLORS[lane % NOTE_COLORS.length],
+        });
+      }
     }
     return generatedNotes;
   }, [shuffle.seqs[currentRound]]);
@@ -763,7 +765,7 @@ export default function App() {
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={() => {
-              const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
+              const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
               if (newRound !== currentRound) {
                 setCurrentRound(newRound);
                 setTrackTimeClamped(0);

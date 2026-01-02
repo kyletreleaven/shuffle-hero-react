@@ -127,6 +127,9 @@ export function basicRounds(
 
 export function enstackify(rounds: number[][], nPiles: number): void {
   const nRounds = rounds.length;
+
+  if (nRounds < 1) return;
+
   const nCards = rounds[0].length;
 
   for (let r = nRounds - 2; r >= 0; r -= 2) {
