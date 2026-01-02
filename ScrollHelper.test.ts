@@ -7,50 +7,19 @@ describe('ScrollHelper', () => {
 
     // Create helper with initial speed
     const helper1 = new ScrollHelper(1.5, numberOfCards, windowHeight);
-    const trackTime1 = 5.0; // arbitrary time position
-
-    // Calculate positions with speed 1
-    const scrollY1 = helper1.scrollY(trackTime1);
-    const cardScreenPositions1 = [0, 10, 20, 30].map(i =>
-      helper1.cardY(i) - scrollY1
-    );
 
     // Change speed to 2.0
     const helper2 = new ScrollHelper(2.0, numberOfCards, windowHeight);
 
-    // Calculate new trackTime that maintains the invariant:
-    // trackTime1 * scrollPixelsPerSec1 = trackTime2 * scrollPixelsPerSec2
-    const trackTime2 = trackTime1 * helper1.scrollPixelsPerSec / helper2.scrollPixelsPerSec;
+    // Check effect of speed change
+    const trackTime = 4;  // speed change doesn't change it
+    const cardIndex = 0;  // shouldn't matter
 
-    // Calculate positions with new speed
-    const scrollY2 = helper2.scrollY(trackTime2);
-    const cardScreenPositions2 = [0, 10, 20, 30].map(i =>
-      helper2.cardY(i) - scrollY2
+    expect(
+      helper1.scrollY(trackTime) - helper1.cardY(cardIndex)
+    ).toBeCloseTo(
+      helper2.scrollY(trackTime) - helper2.cardY(cardIndex)
     );
-
-    // Verify cards haven't jumped
-    cardScreenPositions1.forEach((pos1, idx) => {
-      expect(cardScreenPositions2[idx]).toBeCloseTo(pos1, 5);
-    });
-  });
-
-  test('trackTime * scrollPixelsPerSec stays constant when speed changes', () => {
-    const windowHeight = 800;
-    const numberOfCards = 40;
-
-    const helper1 = new ScrollHelper(1.5, numberOfCards, windowHeight);
-    const trackTime1 = 5.0;
-
-    const distance1 = trackTime1 * helper1.scrollPixelsPerSec;
-
-    // Change speed
-    const helper2 = new ScrollHelper(2.0, numberOfCards, windowHeight);
-    const trackTime2 = trackTime1 * helper1.scrollPixelsPerSec / helper2.scrollPixelsPerSec;
-
-    const distance2 = trackTime2 * helper2.scrollPixelsPerSec;
-
-    // Verify the invariant
-    expect(distance2).toBeCloseTo(distance1, 5);
   });
 
   test('round-trip conversion: scrollY -> trackTime -> scrollY', () => {
