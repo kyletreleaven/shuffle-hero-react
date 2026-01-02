@@ -34,6 +34,9 @@
       "themeColor": "#007AFF",
       "bundler": "metro"
     },
+    "experiments": {
+      "baseUrl": "/shuffle-hero-react"
+    },
     "extra": {
       "eas": {
         "projectId": "shuffle-hero-react"
