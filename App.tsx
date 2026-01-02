@@ -666,61 +666,63 @@ export default function App() {
 
       {/* Bottom button row */}
       <View style={styles.bottomButtonRow}>
+        <View style={styles.centeredButtons}>
+          <TouchableOpacity
+            style={styles.bottomButton}
+            onPress={() => setMenuVisible(true)}
+          >
+            <Text style={styles.buttonText}>Menu</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => reShuffle()}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Shuffle</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={reverse}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Reverse</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => setTrackTimeClamped(0)}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Restart</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => {
+              const newRound = Math.max(0, currentRound - 1);
+              if (newRound !== currentRound) {
+                setCurrentRound(newRound);
+                setTrackTimeClamped(0);
+              }
+            }}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Prev</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => {
+              const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
+              if (newRound !== currentRound) {
+                setCurrentRound(newRound);
+                setTrackTimeClamped(0);
+              }
+            }}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity
           style={styles.bottomButton}
-          onPress={() => setMenuVisible(true)}
-        >
-          <Text style={styles.buttonText}>Menu</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={() => reShuffle()}
-          disabled={inhibitAutoScroll}
-        >
-          <Text style={styles.buttonText}>Shuffle</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={reverse}
-          disabled={inhibitAutoScroll}
-        >
-          <Text style={styles.buttonText}>Reverse</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={() => setTrackTimeClamped(0)}
-          disabled={inhibitAutoScroll}
-        >
-          <Text style={styles.buttonText}>Restart</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={() => {
-            const newRound = Math.max(0, currentRound - 1);
-            if (newRound !== currentRound) {
-              setCurrentRound(newRound);
-              setTrackTimeClamped(0);
-            }
-          }}
-          disabled={inhibitAutoScroll}
-        >
-          <Text style={styles.buttonText}>Prev</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-          onPress={() => {
-            const newRound = Math.min(numberOfRounds - 1, currentRound + 1);
-            if (newRound !== currentRound) {
-              setCurrentRound(newRound);
-              setTrackTimeClamped(0);
-            }
-          }}
-          disabled={inhibitAutoScroll}
-        >
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bottomButton, { marginLeft: 'auto' }]}
           onPress={() => BackHandler.exitApp()}
         >
           <Text style={styles.buttonText}>Exit</Text>
@@ -809,12 +811,18 @@ const styles = StyleSheet.create({
   },
   bottomButtonRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#1a1a1a',
     borderTopWidth: 2,
     borderTopColor: '#4a4a4a',
+  },
+  centeredButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
     gap: 12,
   },
   bottomButton: {
