@@ -14,6 +14,55 @@ const START_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
 
+class ScrollHelper {
+
+  readonly scrollPixelsPerSec: number;
+  readonly startPaddingPixels: number;
+  readonly contentHeight: number;
+  readonly endPaddingPixels: number;
+  readonly contentStartSec: number;
+  readonly scrollYBias: number;
+
+  public readonly trackHeight: number;
+  public readonly minTime: number;
+  public readonly maxTime: number;
+  public readonly timePerRound: number;
+
+  constructor(
+    public readonly scrollCardsPerSec: number,
+    public readonly numberOfCards: number,
+    public readonly windowHeight: number,
+  ) {
+    this.scrollPixelsPerSec = scrollCardsPerSec * CARD_SPACING;
+
+    this.startPaddingPixels = START_PADDING_SECONDS * this.scrollPixelsPerSec;
+    this.contentHeight = CARD_SPACING * (numberOfCards - 1);
+    this.endPaddingPixels = windowHeight;
+    this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
+
+    this.contentStartSec = 0;
+    this.minTime = this.contentStartSec - START_PADDING_SECONDS;
+    this.timePerRound = (this.trackHeight - windowHeight) / this.scrollPixelsPerSec;
+    this.maxTime = this.minTime + this.timePerRound;
+
+    this.scrollYBias = this.trackHeight - this.startPaddingPixels - this.windowHeight;
+  }
+
+  get deps() { return [this.scrollCardsPerSec, this.numberOfCards, this.windowHeight]; }
+
+  cardY(cardIndex: number): number {
+    return this.trackHeight - this.startPaddingPixels - cardIndex * CARD_SPACING;
+  }
+
+  scrollY(trackTime: number): number {
+    return this.scrollYBias - trackTime * this.scrollPixelsPerSec;
+  }
+
+  trackTime(scrollY: number): number {
+    return (this.scrollYBias - scrollY) / this.scrollPixelsPerSec;
+  }
+}
+
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
   '#22c55e', // green
@@ -499,9 +548,6 @@ export default function App() {
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
 
-  // for sensible y updates while speed is zero
-  const trackSpeed = CARD_SPACING * Math.max(scrollSpeed, 0.01);  // pixels/sec
-
   type ShuffleState = {
     permutation: number[];
     currentRound: number;
@@ -514,29 +560,23 @@ export default function App() {
   const numberOfCards = permutation.length;
 
   // Calculate track dimensions
-  const startPadding = START_PADDING_SECONDS * trackSpeed;
-  const contentHeight = (numberOfCards - 1) * CARD_SPACING;
-  const windowHeight = Dimensions.get('window').height;
-  const endPadding = windowHeight;
-  const trackHeight = startPadding + contentHeight + endPadding;
+  const scrollHelper = new ScrollHelper(
+    Math.max(scrollSpeed, 0.01),  // for sensible y updates while speed is zero
+    numberOfCards,
+    Dimensions.get('window').height,
+  );
 
-  const [trackTime, setTrackTime] = useState(0);
-
-  // Maximum track time (when scrolled to end)
-  const maxTrackTime = (trackHeight - windowHeight) / trackSpeed;
+  const [trackTime, setTrackTime] = useState(scrollHelper.minTime);
+  const {trackHeight, minTime: minTrackTime, maxTime: maxTrackTime} = scrollHelper;
 
   // Helper to set trackTime with clamping
   const setTrackTimeClamped = useCallback((time: number) => {
-    setTrackTime(Math.max(0, Math.min(maxTrackTime, time)));
-  }, [maxTrackTime]);
+    setTrackTime(Math.max(minTrackTime, Math.min(maxTrackTime, time)));
+  }, [minTrackTime, maxTrackTime]);
 
-  const resetTrackTime = () => setTrackTime(0);  // Direct reset, no clamping needed for 0
+  const resetTrackTime = () => setTrackTime(minTrackTime);  // Direct reset, no clamping needed for 0
 
-  // Derive scrollY from track time
-  const scrollYOffset = trackHeight - windowHeight;
-  const scrollYSlope = -trackSpeed;  
-  const scrollY = scrollYOffset + scrollYSlope * trackTime;
-  // trackHeight - windowHeight - trackTime * trackSpeed;
+  const scrollY = scrollHelper.scrollY(trackTime);
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
@@ -570,8 +610,6 @@ export default function App() {
 
   const numberOfRounds = shuffle.rounds.length;
 
-  const firstCardPosition = trackHeight - startPadding; // Position of card 0
-
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
     const generatedNotes: Note[] = [];
@@ -583,7 +621,7 @@ export default function App() {
         generatedNotes.push({
           id: i,
           lane,
-          position: firstCardPosition - (i * CARD_SPACING),
+          position: scrollHelper.cardY(i),
           color: NOTE_COLORS[lane % NOTE_COLORS.length],
         });
       }
@@ -649,9 +687,8 @@ export default function App() {
 
   // Convert scrollY to trackTime when manually scrolled
   const handleScrollYChange = useCallback((newScrollY: number) => {
-    const newTrackTime = (newScrollY - scrollYOffset) / scrollYSlope;
-    setTrackTimeClamped(newTrackTime);
-  }, [scrollYOffset, scrollYSlope, setTrackTimeClamped]);
+    setTrackTimeClamped(scrollHelper.trackTime(newScrollY));
+  }, scrollHelper.deps);
 
   return (
     <View style={styles.container}>
@@ -702,8 +739,8 @@ export default function App() {
       <View style={styles.timeDisplay}>
         <Text style={styles.timeText}>
           {scrollSpeed > 0 ? (() => {
-            const currentRoundTime = Math.max(0, scrollY / (scrollSpeed * CARD_SPACING));
-            const timePerRound = (trackHeight - windowHeight) / (scrollSpeed * CARD_SPACING);
+            const currentRoundTime = trackTime - minTrackTime;
+            const timePerRound = scrollHelper.timePerRound;
             const remainingRounds = numberOfRounds - currentRound - 1;
             const totalTime = currentRoundTime + (remainingRounds * timePerRound);
             return `Round ${currentRound + 1}/${numberOfRounds} | ${currentRoundTime.toFixed(1)}s | Total: ${totalTime.toFixed(1)}s`;
