@@ -528,12 +528,14 @@ export default function App() {
     setTrackTime(Math.max(0, Math.min(maxTrackTime, time)));
   }, [maxTrackTime]);
 
+  const resetTrackTime = () => setTrackTime(0);  // Direct reset, no clamping needed for 0
+
   // Derive scrollY from track time
   const scrollY = trackHeight - windowHeight - (trackTime * trackSpeed * CARD_SPACING);
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
-    setTrackTime(0); // Direct reset, no clamping needed for 0
+    resetTrackTime();
   };
 
   // Setters that maintain invariants
@@ -745,7 +747,7 @@ export default function App() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={() => setTrackTimeClamped(0)}
+            onPress={resetTrackTime}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Restart</Text>
@@ -756,7 +758,7 @@ export default function App() {
               const newRound = Math.max(0, currentRound - 1);
               if (newRound !== currentRound) {
                 setCurrentRound(newRound);
-                setTrackTimeClamped(0);
+                resetTrackTime();
               }
             }}
             disabled={inhibitAutoScroll}
@@ -769,7 +771,7 @@ export default function App() {
               const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
               if (newRound !== currentRound) {
                 setCurrentRound(newRound);
-                setTrackTimeClamped(0);
+                resetTrackTime();
               }
             }}
             disabled={inhibitAutoScroll}
