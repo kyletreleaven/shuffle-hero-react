@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Adjust last number (0.0-1.0) for overlay darkness
     justifyContent: 'center',
     alignItems: 'center',
   },
