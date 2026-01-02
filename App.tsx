@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 
 const LANE_COUNT = 5;
@@ -494,26 +495,9 @@ export default function App() {
   const autoScrollState = useAutoScrollViewState();
   const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, inhibitAutoScroll } = autoScrollState;
 
-  // Load saved preferences from localStorage
-  const loadPreferences = () => {
-    if (Platform.OS === 'web') {
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          return JSON.parse(saved);
-        }
-      } catch (e) {
-        console.warn('Failed to load preferences:', e);
-      }
-    }
-    return null;
-  };
-
-  const savedPrefs = loadPreferences();
-
-  // Game settings with saved preferences
-  const [numberOfLanes, setNumberOfLanes] = useState(savedPrefs?.numberOfLanes ?? LANE_COUNT);
-  const [scrollSpeed, setScrollSpeed] = useState(savedPrefs?.scrollSpeed ?? SCROLL_SPEED);
+  // Game settings - initialize with defaults, will load saved values in effect
+  const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
+  const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
 
   type ShuffleState = {
     permutation: number[];
@@ -521,26 +505,61 @@ export default function App() {
   };
 
   const [{permutation, currentRound}, setShuffleState] = useState<ShuffleState>(() => {
-    const numCards = savedPrefs?.numberOfCards ?? NOTE_COUNT;
-    const perm = samplePermutation(numCards);
+    const perm = samplePermutation(NOTE_COUNT);
     return { permutation: perm, currentRound: 0 };
   });
   const numberOfCards = permutation.length;
 
+  // Load preferences on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        let saved: string | null = null;
+        if (Platform.OS === 'web') {
+          saved = localStorage.getItem(STORAGE_KEY);
+        } else {
+          saved = await AsyncStorage.getItem(STORAGE_KEY);
+        }
+
+        if (saved) {
+          const prefs = JSON.parse(saved);
+          if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
+          if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
+          if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
+            const perm = samplePermutation(prefs.numberOfCards);
+            setShuffleState({ permutation: perm, currentRound: 0 });
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load preferences:', e);
+      }
+    };
+
+    loadPreferences();
+  }, []);
+
   // Save preferences when they change
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    const savePreferences = async () => {
       try {
         const prefs = {
           numberOfCards,
           numberOfLanes,
           scrollSpeed,
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+        const prefsString = JSON.stringify(prefs);
+
+        if (Platform.OS === 'web') {
+          localStorage.setItem(STORAGE_KEY, prefsString);
+        } else {
+          await AsyncStorage.setItem(STORAGE_KEY, prefsString);
+        }
       } catch (e) {
         console.warn('Failed to save preferences:', e);
       }
-    }
+    };
+
+    savePreferences();
   }, [numberOfCards, numberOfLanes, scrollSpeed]);
 
   // Calculate track dimensions
