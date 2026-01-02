@@ -721,12 +721,14 @@ export default function App() {
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.bottomButton}
-          onPress={() => BackHandler.exitApp()}
-        >
-          <Text style={styles.buttonText}>Exit</Text>
-        </TouchableOpacity>
+        {Platform.OS !== 'web' && (
+          <TouchableOpacity
+            style={styles.bottomButton}
+            onPress={() => BackHandler.exitApp()}
+          >
+            <Text style={styles.buttonText}>Exit</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <MenuPanel
