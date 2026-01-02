@@ -5,63 +5,13 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
+import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
-const CARD_SPACING = 150; // Vertical spacing between cards
-const START_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
-
-class ScrollHelper {
-
-  readonly scrollPixelsPerSec: number;
-  readonly startPaddingPixels: number;
-  readonly contentHeight: number;
-  readonly endPaddingPixels: number;
-  readonly contentStartSec: number;
-  readonly scrollYBias: number;
-
-  public readonly trackHeight: number;
-  public readonly minTime: number;
-  public readonly maxTime: number;
-  public readonly timePerRound: number;
-
-  constructor(
-    public readonly scrollCardsPerSec: number,
-    public readonly numberOfCards: number,
-    public readonly windowHeight: number,
-  ) {
-    this.scrollPixelsPerSec = scrollCardsPerSec * CARD_SPACING;
-
-    this.startPaddingPixels = START_PADDING_SECONDS * this.scrollPixelsPerSec;
-    this.contentHeight = CARD_SPACING * (numberOfCards - 1);
-    this.endPaddingPixels = windowHeight;
-    this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
-
-    this.contentStartSec = 0;
-    this.minTime = this.contentStartSec - START_PADDING_SECONDS;
-    this.timePerRound = (this.trackHeight - windowHeight) / this.scrollPixelsPerSec;
-    this.maxTime = this.minTime + this.timePerRound;
-
-    this.scrollYBias = this.trackHeight - this.startPaddingPixels - this.windowHeight;
-  }
-
-  get deps() { return [this.scrollCardsPerSec, this.numberOfCards, this.windowHeight]; }
-
-  cardY(cardIndex: number): number {
-    return this.trackHeight - this.startPaddingPixels - cardIndex * CARD_SPACING;
-  }
-
-  scrollY(trackTime: number): number {
-    return this.scrollYBias - trackTime * this.scrollPixelsPerSec;
-  }
-
-  trackTime(scrollY: number): number {
-    return (this.scrollYBias - scrollY) / this.scrollPixelsPerSec;
-  }
-}
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
