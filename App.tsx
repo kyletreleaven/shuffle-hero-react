@@ -10,7 +10,7 @@ const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const CARD_SPACING = 150; // Vertical spacing between cards
-const BOTTOM_PADDING_SECONDS = 2; // Seconds of track at bottom
+const START_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
 
@@ -499,6 +499,9 @@ export default function App() {
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
 
+  // for sensible y updates while speed is zero
+  const trackSpeed = CARD_SPACING * Math.max(scrollSpeed, 0.01);  // pixels/sec
+
   type ShuffleState = {
     permutation: number[];
     currentRound: number;
@@ -511,17 +514,16 @@ export default function App() {
   const numberOfCards = permutation.length;
 
   // Calculate track dimensions
+  const startPadding = START_PADDING_SECONDS * trackSpeed;
+  const contentHeight = (numberOfCards - 1) * CARD_SPACING;
   const windowHeight = Dimensions.get('window').height;
-  const topPadding = windowHeight; // 1 screen of space at top
-  const bottomPadding = BOTTOM_PADDING_SECONDS * scrollSpeed * CARD_SPACING;
-  const trackHeight = topPadding + (numberOfCards - 2) * CARD_SPACING + bottomPadding;
-  const firstCardPosition = trackHeight - bottomPadding; // Position of card 0
+  const endPadding = windowHeight;
+  const trackHeight = startPadding + contentHeight + endPadding;
 
   const [trackTime, setTrackTime] = useState(0);
 
-  // Maximum track time (when scrolled to top)
-  const trackSpeed = Math.max(scrollSpeed, 0.01);  // for sensible y updates while speed is zero
-  const maxTrackTime = (trackHeight - windowHeight) / (trackSpeed * CARD_SPACING);
+  // Maximum track time (when scrolled to end)
+  const maxTrackTime = (trackHeight - windowHeight) / trackSpeed;
 
   // Helper to set trackTime with clamping
   const setTrackTimeClamped = useCallback((time: number) => {
@@ -531,7 +533,10 @@ export default function App() {
   const resetTrackTime = () => setTrackTime(0);  // Direct reset, no clamping needed for 0
 
   // Derive scrollY from track time
-  const scrollY = trackHeight - windowHeight - (trackTime * trackSpeed * CARD_SPACING);
+  const scrollYOffset = trackHeight - windowHeight;
+  const scrollYSlope = -trackSpeed;  
+  const scrollY = scrollYOffset + scrollYSlope * trackTime;
+  // trackHeight - windowHeight - trackTime * trackSpeed;
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
@@ -564,6 +569,8 @@ export default function App() {
   }, [permutation, numberOfLanes]);
 
   const numberOfRounds = shuffle.rounds.length;
+
+  const firstCardPosition = trackHeight - startPadding; // Position of card 0
 
   // Generate notes with round-robin dealing and constant spacing (from bottom up)
   const notes = useMemo(() => {
@@ -642,9 +649,9 @@ export default function App() {
 
   // Convert scrollY to trackTime when manually scrolled
   const handleScrollYChange = useCallback((newScrollY: number) => {
-    const newTrackTime = (trackHeight - windowHeight - newScrollY) / (trackSpeed * CARD_SPACING);
+    const newTrackTime = (newScrollY - scrollYOffset) / scrollYSlope;
     setTrackTimeClamped(newTrackTime);
-  }, [trackHeight, windowHeight, trackSpeed, setTrackTimeClamped]);
+  }, [scrollYOffset, scrollYSlope, setTrackTimeClamped]);
 
   return (
     <View style={styles.container}>
