@@ -5,10 +5,10 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import * as ShuffleUtil from './ShuffleUtil';
 
-const LANE_COUNT = 4;
-const NOTE_COUNT = 50; // Number of cards
+const LANE_COUNT = 5;
+const NOTE_COUNT = 40; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
-const CARD_SPACING = 100; // Vertical spacing between cards
+const CARD_SPACING = 150; // Vertical spacing between cards
 const BOTTOM_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 
