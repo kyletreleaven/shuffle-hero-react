@@ -32,7 +32,8 @@
       "description": "Guitar Hero-style shuffle trainer for card magic practice",
       "backgroundColor": "#1a1a1a",
       "themeColor": "#007AFF",
-      "bundler": "metro"
+      "bundler": "metro",
+      "baseUrl": "/shuffle-hero-react/"
     },
     "extra": {
       "eas": {
