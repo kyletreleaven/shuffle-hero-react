@@ -11,6 +11,7 @@ const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const CARD_SPACING = 150; // Vertical spacing between cards
 const BOTTOM_PADDING_SECONDS = 2; // Seconds of track at bottom
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
+const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -493,9 +494,26 @@ export default function App() {
   const autoScrollState = useAutoScrollViewState();
   const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, inhibitAutoScroll } = autoScrollState;
 
-  // Game settings
-  const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
-  const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+  // Load saved preferences from localStorage
+  const loadPreferences = () => {
+    if (Platform.OS === 'web') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load preferences:', e);
+      }
+    }
+    return null;
+  };
+
+  const savedPrefs = loadPreferences();
+
+  // Game settings with saved preferences
+  const [numberOfLanes, setNumberOfLanes] = useState(savedPrefs?.numberOfLanes ?? LANE_COUNT);
+  const [scrollSpeed, setScrollSpeed] = useState(savedPrefs?.scrollSpeed ?? SCROLL_SPEED);
 
   type ShuffleState = {
     permutation: number[];
@@ -503,10 +521,27 @@ export default function App() {
   };
 
   const [{permutation, currentRound}, setShuffleState] = useState<ShuffleState>(() => {
-    const perm = samplePermutation(NOTE_COUNT);
+    const numCards = savedPrefs?.numberOfCards ?? NOTE_COUNT;
+    const perm = samplePermutation(numCards);
     return { permutation: perm, currentRound: 0 };
   });
   const numberOfCards = permutation.length;
+
+  // Save preferences when they change
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      try {
+        const prefs = {
+          numberOfCards,
+          numberOfLanes,
+          scrollSpeed,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+      } catch (e) {
+        console.warn('Failed to save preferences:', e);
+      }
+    }
+  }, [numberOfCards, numberOfLanes, scrollSpeed]);
 
   // Calculate track dimensions
   const windowHeight = Dimensions.get('window').height;
