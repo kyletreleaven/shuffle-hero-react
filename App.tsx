@@ -691,8 +691,9 @@ export default function App() {
       <View style={styles.timeDisplay}>
         <Text style={styles.timeText}>
           {scrollSpeed > 0 ? (() => {
-            const currentRoundTime = scrollHelper.trackTime(scrollY) - minTrackTime;
             const timePerRound = scrollHelper.timePerRound;
+            const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
+            const currentRoundTime = timePerRound - elapsed;
             const remainingRounds = numberOfRounds - currentRound - 1;
             const totalTime = currentRoundTime + (remainingRounds * timePerRound);
             return `Round ${currentRound + 1}/${numberOfRounds} | ${currentRoundTime.toFixed(1)}s | Total: ${totalTime.toFixed(1)}s`;
