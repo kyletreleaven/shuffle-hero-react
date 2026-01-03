@@ -750,32 +750,34 @@ export default function App() {
           >
             <Text style={styles.buttonText}>Restart</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={() => {
-              const newRound = Math.max(0, currentRound - 1);
-              if (newRound !== currentRound) {
-                setCurrentRound(newRound);
-                resetScrollY();
-              }
-            }}
-            disabled={inhibitAutoScroll}
-          >
-            <Text style={styles.buttonText}>Prev</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={() => {
-              const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
-              if (newRound !== currentRound) {
-                setCurrentRound(newRound);
-                resetScrollY();
-              }
-            }}
-            disabled={inhibitAutoScroll}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
+          <View style={styles.navigationButtons}>
+            <TouchableOpacity
+              style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+              onPress={() => {
+                const newRound = Math.max(0, currentRound - 1);
+                if (newRound !== currentRound) {
+                  setCurrentRound(newRound);
+                  resetScrollY();
+                }
+              }}
+              disabled={inhibitAutoScroll}
+            >
+              <Text style={styles.buttonText}>Prev</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+              onPress={() => {
+                const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
+                if (newRound !== currentRound) {
+                  setCurrentRound(newRound);
+                  resetScrollY();
+                }
+              }}
+              disabled={inhibitAutoScroll}
+            >
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {Platform.OS !== 'web' && (
           <TouchableOpacity
@@ -880,9 +882,14 @@ const styles = StyleSheet.create({
   },
   centeredButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
+    gap: 12,
+  },
+  navigationButtons: {
+    flexDirection: 'row',
     gap: 12,
   },
   bottomButton: {
