@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -488,6 +488,7 @@ const samplePermutation = (numCards: number) => {
 
 
 export default function App() {
+  const windowDimensions = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
 
   // Autoscroll state management
@@ -513,7 +514,7 @@ export default function App() {
   const scrollHelper = new ScrollHelper(
     Math.max(scrollSpeed, 0.01),  // for sensible y updates while speed is zero
     numberOfCards,
-    Dimensions.get('window').height,
+    windowDimensions.height,
   );
 
   const initialScrollY = scrollHelper.initialScrollY;
@@ -653,7 +654,7 @@ export default function App() {
         onScrollYChange={handleScrollYChange}
         state={autoScrollState}
       >
-        <View style={[styles.track, { height: trackHeight }]}>
+        <View style={[styles.track, { height: trackHeight, width: windowDimensions.width }]}>
           {/* Render vertical lanes */}
           {Array.from({ length: numberOfLanes }).map((_, index) => (
             <View
@@ -667,7 +668,7 @@ export default function App() {
 
           {/* Render notes */}
           {notes.map((note) => {
-            const laneWidth = Dimensions.get('window').width / numberOfLanes;
+            const laneWidth = windowDimensions.width / numberOfLanes;
             return (
               <View
                 key={note.id}
@@ -818,7 +819,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   track: {
-    width: Dimensions.get('window').width,
     backgroundColor: '#2a2a2a',
     flexDirection: 'row',
     borderLeftWidth: 2,
