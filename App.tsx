@@ -516,7 +516,7 @@ export default function App() {
     Dimensions.get('window').height,
   );
 
-  const initialScrollY = scrollHelper.scrollY(scrollHelper.minTime);
+  const initialScrollY = scrollHelper.initialScrollY;
   const [scrollY, setScrollY] = useState(initialScrollY);
   const {trackHeight, minTime: minTrackTime, maxTime: maxTrackTime} = scrollHelper;
 
@@ -529,7 +529,13 @@ export default function App() {
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
-    resetScrollY();
+
+    const nextScrollHelper = new ScrollHelper(
+      scrollHelper.scrollCardsPerSec,
+      perm.length,
+      scrollHelper.windowHeight,
+    );
+    setScrollY(nextScrollHelper.initialScrollY);
   };
 
   // Setters that maintain invariants

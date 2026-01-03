@@ -49,6 +49,10 @@ export class ScrollHelper {
     return Math.min(Math.max(0, scrollY), this.trackHeight - this.windowHeight);
   }
 
+  get initialScrollY() {
+    return this.scrollY(this.minTime);
+  }
+
   trackTime(scrollY: number): number {
     return (this.scrollYBias - scrollY) / this.scrollPixelsPerSec;
   }
