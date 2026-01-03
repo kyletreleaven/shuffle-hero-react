@@ -516,21 +516,20 @@ export default function App() {
     Dimensions.get('window').height,
   );
 
-  const [trackTime, setTrackTime] = useState(scrollHelper.minTime);
+  const initialScrollY = scrollHelper.scrollY(scrollHelper.minTime);
+  const [scrollY, setScrollY] = useState(initialScrollY);
   const {trackHeight, minTime: minTrackTime, maxTime: maxTrackTime} = scrollHelper;
 
   // Helper to set trackTime with clamping
-  const setTrackTimeClamped = useCallback((time: number) => {
-    setTrackTime(Math.max(minTrackTime, Math.min(maxTrackTime, time)));
-  }, [minTrackTime, maxTrackTime]);
+  const setScrollYClamped = useCallback((scrollY: number) => {
+    setScrollY(scrollHelper.clampScrollY(scrollY));
+  }, [scrollHelper.deps]);
 
-  const resetTrackTime = () => setTrackTime(minTrackTime);  // Direct reset, no clamping needed for 0
-
-  const scrollY = scrollHelper.scrollY(trackTime);
+  const resetScrollY = () => setScrollY(initialScrollY);  // Direct reset, no clamping needed for 0
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
-    resetTrackTime();
+    resetScrollY();
   };
 
   // Setters that maintain invariants
@@ -635,10 +634,7 @@ export default function App() {
     savePreferences();
   }, [numberOfCards, numberOfLanes, scrollSpeed]);
 
-  // Convert scrollY to trackTime when manually scrolled
-  const handleScrollYChange = useCallback((newScrollY: number) => {
-    setTrackTimeClamped(scrollHelper.trackTime(newScrollY));
-  }, scrollHelper.deps);
+  const handleScrollYChange = setScrollY;
 
   return (
     <View style={styles.container}>
@@ -689,7 +685,7 @@ export default function App() {
       <View style={styles.timeDisplay}>
         <Text style={styles.timeText}>
           {scrollSpeed > 0 ? (() => {
-            const currentRoundTime = trackTime - minTrackTime;
+            const currentRoundTime = scrollHelper.trackTime(scrollY) - minTrackTime;
             const timePerRound = scrollHelper.timePerRound;
             const remainingRounds = numberOfRounds - currentRound - 1;
             const totalTime = currentRoundTime + (remainingRounds * timePerRound);
@@ -741,7 +737,7 @@ export default function App() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={resetTrackTime}
+            onPress={resetScrollY}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Restart</Text>
@@ -752,7 +748,7 @@ export default function App() {
               const newRound = Math.max(0, currentRound - 1);
               if (newRound !== currentRound) {
                 setCurrentRound(newRound);
-                resetTrackTime();
+                resetScrollY();
               }
             }}
             disabled={inhibitAutoScroll}
@@ -765,7 +761,7 @@ export default function App() {
               const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
               if (newRound !== currentRound) {
                 setCurrentRound(newRound);
-                resetTrackTime();
+                resetScrollY();
               }
             }}
             disabled={inhibitAutoScroll}
@@ -791,7 +787,7 @@ export default function App() {
         numberOfLanes={numberOfLanes}
         setNumberOfLanes={(m) => {
           setNumberOfLanes(m);
-          resetTrackTime();
+          resetScrollY();
         }}
         scrollSpeed={scrollSpeed}
         setScrollSpeed={setScrollSpeed}

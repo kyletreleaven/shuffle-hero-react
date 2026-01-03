@@ -45,6 +45,10 @@ export class ScrollHelper {
     return this.scrollYBias - trackTime * this.scrollPixelsPerSec;
   }
 
+  clampScrollY(scrollY: number): number {
+    return Math.min(Math.max(0, scrollY), this.trackHeight - this.windowHeight);
+  }
+
   trackTime(scrollY: number): number {
     return (this.scrollYBias - scrollY) / this.scrollPixelsPerSec;
   }
