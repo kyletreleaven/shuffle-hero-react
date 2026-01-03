@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -465,6 +465,13 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               value={scrollSpeed}
               onChange={setScrollSpeed}
             />
+
+            <TouchableOpacity
+              onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
+              style={styles.homepageLink}
+            >
+              <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.closeButton}
@@ -976,6 +983,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     minWidth: 50,
     textAlign: 'center',
+  },
+  homepageLink: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  homepageLinkText: {
+    color: '#007AFF',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
   closeButton: {
     backgroundColor: '#FF3B30',
