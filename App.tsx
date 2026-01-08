@@ -857,8 +857,6 @@ const styles = StyleSheet.create({
   cardPanel: {
     flex: 0.4,
     backgroundColor: '#0a0a0a',
-    justifyContent: 'center',
-    alignItems: 'center',
     borderTopWidth: 2,
     borderTopColor: '#333',
   },
