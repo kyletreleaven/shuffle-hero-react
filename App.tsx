@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
 import { ViewModeToggle } from './components/ViewModeToggle';
+import { AnimatedCardDeck } from './components/AnimatedCardDeck';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
@@ -703,7 +704,15 @@ export default function App() {
       {/* Card animation panel (40% height, only visible in split mode) */}
       {viewMode === 'split' && (
         <View style={styles.cardPanel}>
-          <Text style={styles.placeholderText}>Card Animation (Coming Soon)</Text>
+          <AnimatedCardDeck
+            shuffle={shuffle}
+            currentRound={currentRound}
+            numberOfCards={numberOfCards}
+            numberOfLanes={numberOfLanes}
+            trackTime={scrollHelper.trackTime(scrollY)}
+            scrollHelper={scrollHelper}
+            colors={NOTE_COLORS}
+          />
         </View>
       )}
 
