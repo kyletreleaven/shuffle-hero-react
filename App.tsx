@@ -6,6 +6,7 @@ import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
+import { ViewModeToggle } from './components/ViewModeToggle';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
@@ -505,6 +506,7 @@ export default function App() {
   // Game settings - initialize with defaults, will load saved values in effect
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+  const [viewMode, setViewMode] = useState<'track' | 'split'>('track');
 
   type ShuffleState = {
     permutation: number[];
@@ -652,48 +654,58 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <AutoScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        scrollSpeed={scrollSpeed * CARD_SPACING}
-        scrollY={scrollY}
-        onScrollYChange={handleScrollYChange}
-        state={autoScrollState}
-      >
-        <View style={[styles.track, { height: trackHeight, width: windowDimensions.width }]}>
-          {/* Render vertical lanes */}
-          {Array.from({ length: numberOfLanes }).map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.lane,
-                { backgroundColor: index % 2 === 0 ? '#1a1a1a' : '#2a2a2a' }
-              ]}
-            />
-          ))}
-
-          {/* Render notes */}
-          {notes.map((note) => {
-            const laneWidth = windowDimensions.width / numberOfLanes;
-            return (
+      {/* Track view panel (60% in split mode, 100% in track mode) */}
+      <View style={viewMode === 'split' ? styles.trackPanel : styles.trackPanelFull}>
+        <AutoScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          scrollSpeed={scrollSpeed * CARD_SPACING}
+          scrollY={scrollY}
+          onScrollYChange={handleScrollYChange}
+          state={autoScrollState}
+        >
+          <View style={[styles.track, { height: trackHeight, width: windowDimensions.width }]}>
+            {/* Render vertical lanes */}
+            {Array.from({ length: numberOfLanes }).map((_, index) => (
               <View
-                key={note.id}
+                key={index}
                 style={[
-                  styles.note,
-                  {
-                    backgroundColor: note.color,
-                    left: note.lane * laneWidth + laneWidth / 2 - 30,
-                    top: note.position,
-                  },
+                  styles.lane,
+                  { backgroundColor: index % 2 === 0 ? '#1a1a1a' : '#2a2a2a' }
                 ]}
-              >
-                <Text style={styles.noteNumber}>{note.id + 1}</Text>
-              </View>
-            );
-          })}
+              />
+            ))}
+
+            {/* Render notes */}
+            {notes.map((note) => {
+              const laneWidth = windowDimensions.width / numberOfLanes;
+              return (
+                <View
+                  key={note.id}
+                  style={[
+                    styles.note,
+                    {
+                      backgroundColor: note.color,
+                      left: note.lane * laneWidth + laneWidth / 2 - 30,
+                      top: note.position,
+                    },
+                  ]}
+                >
+                  <Text style={styles.noteNumber}>{note.id + 1}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </AutoScrollView>
+      </View>
+
+      {/* Card animation panel (40% height, only visible in split mode) */}
+      {viewMode === 'split' && (
+        <View style={styles.cardPanel}>
+          <Text style={styles.placeholderText}>Card Animation (Coming Soon)</Text>
         </View>
-      </AutoScrollView>
+      )}
 
       {/* Time Remaining Display */}
       <View style={styles.timeDisplay}>
@@ -757,6 +769,11 @@ export default function App() {
           >
             <Text style={styles.buttonText}>Restart</Text>
           </TouchableOpacity>
+          <ViewModeToggle
+            viewMode={viewMode}
+            onToggle={() => setViewMode(viewMode === 'track' ? 'split' : 'track')}
+            disabled={inhibitAutoScroll}
+          />
           <View style={styles.navigationButtons}>
             <TouchableOpacity
               style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
@@ -819,6 +836,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+  },
+  trackPanel: {
+    flex: 0.6,
+    position: 'relative',
+  },
+  trackPanelFull: {
+    flex: 1,
+    position: 'relative',
+  },
+  cardPanel: {
+    flex: 0.4,
+    backgroundColor: '#0a0a0a',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopWidth: 2,
+    borderTopColor: '#333',
+  },
+  placeholderText: {
+    color: '#666',
+    fontSize: 18,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
