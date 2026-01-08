@@ -190,13 +190,20 @@ export function calculateCardPosition(
   }
 
   // Calculate when this card should be dealt
-  // Card i is dealt when note i reaches the beat line
+  // Card i is dealt when note i reaches the beat line (middle of viewport)
   const roundStartTime = scrollHelper.minTime + currentRound * scrollHelper.timePerRound;
-  const roundEndTime = roundStartTime + scrollHelper.timePerRound;
 
-  // Time when card i completes its deal (when note i reaches beat line)
-  // Distribute card deals evenly across the round
-  const cardDealTime = roundStartTime + (positionInSequence / totalCards) * scrollHelper.timePerRound;
+  // The beat line is at the vertical middle of the viewport
+  // Card at position cardY(i) reaches beat line when: cardY(i) - scrollY = windowHeight / 2
+  // So: scrollY = cardY(i) - windowHeight / 2
+  // And: trackTime = (scrollYBias - scrollY) / scrollPixelsPerSec
+  const cardYPosition = scrollHelper.cardY(positionInSequence);
+  const beatLineOffset = scrollHelper.windowHeight / 2;
+  const scrollYAtBeatLine = cardYPosition - beatLineOffset;
+  const cardBeatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
+
+  // Offset by the round
+  const cardDealTime = cardBeatLineTime + currentRound * scrollHelper.timePerRound;
 
   // Duration for a single card's deal animation
   const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
