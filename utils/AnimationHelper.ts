@@ -52,14 +52,16 @@ export function calculateAnimationState(
 }
 
 /**
- * Calculate the x-positions for each pile, evenly distributed across the container width
+ * Calculate the x-positions for each pile, aligned with the track view lanes
  */
 export function calculatePilePositions(numberOfPiles: number, containerWidth: number): number[] {
-  const padding = 60; // Padding from edges
-  const availableWidth = containerWidth - 2 * padding;
-  const spacing = availableWidth / (numberOfPiles - 1);
+  // Each pile should align with the center of its corresponding lane in the track view
+  const laneWidth = containerWidth / numberOfPiles;
 
-  return Array.from({ length: numberOfPiles }, (_, i) => padding + i * spacing);
+  return Array.from({ length: numberOfPiles }, (_, i) => {
+    // Center of lane i
+    return i * laneWidth + laneWidth / 2;
+  });
 }
 
 /**
@@ -71,8 +73,9 @@ export function getSourcePosition(
   containerWidth: number,
   containerHeight: number
 ): CardPosition {
-  const padding = 40;
+  const padding = 20;
   const cardWidth = 40;
+  const cardHeight = 60;
   const cardSpacing = 2;
 
   // Calculate how many cards fit in one row
@@ -88,19 +91,19 @@ export function getSourcePosition(
 
     return {
       x: startX + col * (cardWidth + cardSpacing),
-      y: containerHeight - padding - 60 - row * 70, // Stack rows upward
+      y: containerHeight - padding - cardHeight - row * (cardHeight + 10), // Stack rows upward
       rotation: 0,
       scale: 1,
     };
   }
 
-  // Single row - center the cards
-  const totalWidth = totalCards * (cardWidth + cardSpacing);
+  // Single row - center the cards horizontally
+  const totalWidth = totalCards * (cardWidth + cardSpacing) - cardSpacing; // Don't count spacing after last card
   const startX = (containerWidth - totalWidth) / 2;
 
   return {
     x: startX + cardIndex * (cardWidth + cardSpacing),
-    y: containerHeight - padding - 60,
+    y: containerHeight - padding - cardHeight,
     rotation: 0,
     scale: 1,
   };
