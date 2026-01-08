@@ -212,6 +212,18 @@ export function calculateCardPosition(
   const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
   const cardDealStartTime = cardDealTime - dealDuration;
 
+  // Calculate when the last card finishes dealing
+  const lastCardPosition = totalCards - 1;
+  const lastCardYPosition = scrollHelper.cardY(lastCardPosition);
+  const lastCardScrollYAtBeatLine = lastCardYPosition - beatLineOffset;
+  const lastCardBeatLineTime = scrollHelper.trackTime(lastCardScrollYAtBeatLine);
+  const lastCardTimeFromRoundStart = lastCardBeatLineTime - scrollHelper.minTime;
+  const lastCardDealTime = scrollHelper.minTime + lastCardTimeFromRoundStart;
+
+  // Collect phase starts after all cards are dealt and lasts until round ends
+  const collectPhaseStart = lastCardDealTime;
+  const collectPhaseEnd = scrollHelper.maxTime;
+
   // Get source and target positions
   const sourcePos = getSourcePosition(positionInSequence, totalCards, containerWidth, containerHeight);
 
@@ -240,8 +252,19 @@ export function calculateCardPosition(
     // Card is currently being dealt - interpolate
     const dealProgress = (trackTime - cardDealStartTime) / dealDuration;
     return { ...interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true), zIndex: baseZIndex };
-  } else {
+  } else if (trackTime < collectPhaseStart) {
     // Card has been dealt - stay in pile position
     return { ...pilePos, zIndex: baseZIndex };
+  } else {
+    // Collect phase - animate piles to new deck
+    const nextSequence = shuffle.seqs[currentRound + 1] || sequence;
+    const nextPositionInSequence = nextSequence.indexOf(faceValue);
+    const finalPos = getSourcePosition(nextPositionInSequence, totalCards, containerWidth, containerHeight);
+
+    const collectProgress = (trackTime - collectPhaseStart) / (collectPhaseEnd - collectPhaseStart);
+    return {
+      ...interpolatePosition(pilePos, finalPos, Math.min(1, collectProgress), false),
+      zIndex: baseZIndex
+    };
   }
 }
