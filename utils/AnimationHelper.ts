@@ -220,9 +220,16 @@ export function calculateCardPosition(
   const lastCardTimeFromRoundStart = lastCardBeatLineTime - scrollHelper.minTime;
   const lastCardDealTime = scrollHelper.minTime + lastCardTimeFromRoundStart;
 
-  // Collect phase starts after all cards are dealt and lasts until round ends
-  const collectPhaseStart = lastCardDealTime;
+  // Add a small delay before collection starts so piles are visible
+  const pauseBeforeCollect = 0.5; // seconds
+  const collectPhaseStart = Math.min(lastCardDealTime + pauseBeforeCollect, scrollHelper.maxTime - 0.5);
   const collectPhaseEnd = scrollHelper.maxTime;
+
+  // Check if there's enough time for collection animation
+  const collectPhaseDuration = collectPhaseEnd - collectPhaseStart;
+  const minCollectDuration = 0.5; // Need at least 0.5 seconds for smooth collection
+
+  // If not enough time, collection will be faster (or we could extend padding)
 
   // Get source and target positions
   const sourcePos = getSourcePosition(positionInSequence, totalCards, containerWidth, containerHeight);
