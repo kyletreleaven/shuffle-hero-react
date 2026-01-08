@@ -4,11 +4,12 @@ import type { CardPosition } from '../utils/AnimationHelper';
 
 type AnimatedCardProps = {
   cardNumber: number;
+  displayValue: number;
   position: CardPosition;
   color: string;
 };
 
-export const AnimatedCard = React.memo(({ cardNumber, position, color }: AnimatedCardProps) => {
+export const AnimatedCard = React.memo(({ cardNumber, displayValue, position, color }: AnimatedCardProps) => {
   const animatedX = useRef(new Animated.Value(position.x)).current;
   const animatedY = useRef(new Animated.Value(position.y)).current;
 
@@ -36,6 +37,7 @@ export const AnimatedCard = React.memo(({ cardNumber, position, color }: Animate
           backgroundColor: color,
           left: animatedX,
           top: animatedY,
+          zIndex: position.zIndex || 0,
           transform: [
             { rotate: `${position.rotation || 0}deg` },
             { scale: position.scale || 1 },
@@ -43,7 +45,7 @@ export const AnimatedCard = React.memo(({ cardNumber, position, color }: Animate
         },
       ]}
     >
-      <Text style={styles.cardNumber}>{cardNumber + 1}</Text>
+      <Text style={styles.cardNumber}>{displayValue + 1}</Text>
     </Animated.View>
   );
 });

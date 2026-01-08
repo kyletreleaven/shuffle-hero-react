@@ -13,6 +13,7 @@ type AnimatedCardDeckProps = {
   trackTime: number;
   scrollHelper: ScrollHelper;
   colors: string[];
+  permutation: number[];
   stackOffset?: number;
 };
 
@@ -24,6 +25,7 @@ export function AnimatedCardDeck({
   trackTime,
   scrollHelper,
   colors,
+  permutation,
   stackOffset = 5,
 }: AnimatedCardDeckProps) {
   const windowDimensions = useWindowDimensions();
@@ -47,6 +49,7 @@ export function AnimatedCardDeck({
 
       positions.push({
         cardNumber: faceValue,
+        displayValue: permutation[faceValue],
         position,
         color: colors[faceValue % colors.length],
       });
@@ -64,14 +67,16 @@ export function AnimatedCardDeck({
     numberOfLanes,
     stackOffset,
     colors,
+    permutation,
   ]);
 
   return (
     <View style={styles.container}>
-      {cardPositions.map(({ cardNumber, position, color }) => (
+      {cardPositions.map(({ cardNumber, displayValue, position, color }) => (
         <AnimatedCard
           key={cardNumber}
           cardNumber={cardNumber}
+          displayValue={displayValue}
           position={position}
           color={color}
         />

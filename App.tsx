@@ -712,6 +712,7 @@ export default function App() {
             trackTime={scrollHelper.trackTime(scrollY)}
             scrollHelper={scrollHelper}
             colors={NOTE_COLORS}
+            permutation={permutation}
           />
         </View>
       )}

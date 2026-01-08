@@ -5,6 +5,7 @@ export type CardPosition = {
   y: number;
   rotation?: number;
   scale?: number;
+  zIndex?: number;
 };
 
 export type AnimationPhase = 'deal' | 'stack' | 'collect';
@@ -218,16 +219,19 @@ export function calculateCardPosition(
 
   const pilePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, stackOffset);
 
+  // Set zIndex based on dealing order - later cards appear on top
+  const baseZIndex = positionInSequence;
+
   // Determine card state based on current time
   if (trackTime < cardDealStartTime) {
     // Card hasn't started dealing yet - stay in source position
-    return sourcePos;
+    return { ...sourcePos, zIndex: baseZIndex };
   } else if (trackTime < cardDealTime) {
     // Card is currently being dealt - interpolate
     const dealProgress = (trackTime - cardDealStartTime) / dealDuration;
-    return interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true);
+    return { ...interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true), zIndex: baseZIndex };
   } else {
     // Card has been dealt - stay in pile position
-    return pilePos;
+    return { ...pilePos, zIndex: baseZIndex };
   }
 }
