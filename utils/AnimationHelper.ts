@@ -195,15 +195,14 @@ export function calculateCardPosition(
 
   // The beat line is at the vertical middle of the viewport
   // Card at position cardY(i) reaches beat line when: cardY(i) - scrollY = windowHeight / 2
-  // So: scrollY = cardY(i) - windowHeight / 2
-  // And: trackTime = (scrollYBias - scrollY) / scrollPixelsPerSec
   const cardYPosition = scrollHelper.cardY(positionInSequence);
   const beatLineOffset = scrollHelper.windowHeight / 2;
   const scrollYAtBeatLine = cardYPosition - beatLineOffset;
   const cardBeatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
 
-  // Offset by the round
-  const cardDealTime = cardBeatLineTime + currentRound * scrollHelper.timePerRound;
+  // Time offset from start of any round (same for all rounds)
+  const timeFromRoundStart = cardBeatLineTime - scrollHelper.minTime;
+  const cardDealTime = roundStartTime + timeFromRoundStart;
 
   // Duration for a single card's deal animation
   const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
