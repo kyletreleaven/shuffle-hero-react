@@ -176,7 +176,8 @@ export function calculateCardPosition(
   containerWidth: number,
   containerHeight: number,
   numberOfPiles: number,
-  stackOffset: number = 5
+  stackOffset: number = 5,
+  trackPanelHeight?: number
 ): CardPosition {
   const sequence = shuffle.seqs[currentRound];
   const totalCards = sequence.length;
@@ -190,13 +191,14 @@ export function calculateCardPosition(
   }
 
   // Calculate when this card should be dealt
-  // Card i is dealt when note i reaches the beat line (middle of viewport)
+  // Card i is dealt when note i reaches the beat line (middle of visible track panel)
   const roundStartTime = scrollHelper.minTime + currentRound * scrollHelper.timePerRound;
 
-  // The beat line is at the vertical middle of the viewport
-  // Card at position cardY(i) reaches beat line when: cardY(i) - scrollY = windowHeight / 2
+  // The beat line is at the vertical middle of the actual visible track panel
+  // In split mode, this is 60% of window height, otherwise full window height
+  const actualTrackHeight = trackPanelHeight || scrollHelper.windowHeight;
   const cardYPosition = scrollHelper.cardY(positionInSequence);
-  const beatLineOffset = scrollHelper.windowHeight / 2;
+  const beatLineOffset = actualTrackHeight / 2;
   const scrollYAtBeatLine = cardYPosition - beatLineOffset;
   const cardBeatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
 

@@ -44,7 +44,8 @@ export function AnimatedCardDeck({
         windowDimensions.width,
         windowDimensions.height * 0.4, // Card panel is 40% of window height
         numberOfLanes,
-        stackOffset
+        stackOffset,
+        windowDimensions.height * 0.6 // Track panel is 60% of window height
       );
 
       positions.push({
