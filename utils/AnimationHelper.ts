@@ -192,7 +192,6 @@ export function calculateCardPosition(
 
   // Calculate when this card should be dealt
   // Card i is dealt when note i reaches the beat line (middle of visible track panel)
-  const roundStartTime = scrollHelper.minTime + currentRound * scrollHelper.timePerRound;
 
   // The beat line is at the vertical middle of the actual visible track panel
   // In split mode, this is 60% of window height, otherwise full window height
@@ -202,9 +201,12 @@ export function calculateCardPosition(
   const scrollYAtBeatLine = cardYPosition - beatLineOffset;
   const cardBeatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
 
-  // Time offset from start of any round (same for all rounds)
+  // Time offset from start of round 0 (same pattern repeats in all rounds)
   const timeFromRoundStart = cardBeatLineTime - scrollHelper.minTime;
-  const cardDealTime = roundStartTime + timeFromRoundStart;
+
+  // For each round, trackTime ranges from minTime to maxTime
+  // So we just use the offset within the round, not absolute time across rounds
+  const cardDealTime = scrollHelper.minTime + timeFromRoundStart;
 
   // Duration for a single card's deal animation
   const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
