@@ -2,10 +2,7 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { AnimatedCard } from './AnimatedCard';
 import type { Shuffle } from '../utils/AnimationHelper';
-import {
-  calculateAnimationState,
-  calculateCardPosition,
-} from '../utils/AnimationHelper';
+import { calculateCardPosition } from '../utils/AnimationHelper';
 import { ScrollHelper } from '../ScrollHelper';
 
 type AnimatedCardDeckProps = {
@@ -16,6 +13,7 @@ type AnimatedCardDeckProps = {
   trackTime: number;
   scrollHelper: ScrollHelper;
   colors: string[];
+  stackOffset?: number;
 };
 
 export function AnimatedCardDeck({
@@ -26,33 +24,31 @@ export function AnimatedCardDeck({
   trackTime,
   scrollHelper,
   colors,
+  stackOffset = 5,
 }: AnimatedCardDeckProps) {
   const windowDimensions = useWindowDimensions();
-
-  // Calculate animation state based on current time
-  const animationState = useMemo(() => {
-    return calculateAnimationState(trackTime, currentRound, scrollHelper);
-  }, [trackTime, currentRound, scrollHelper]);
 
   // Calculate positions for all cards
   const cardPositions = useMemo(() => {
     const positions = [];
 
-    for (let cardNumber = 0; cardNumber < numberOfCards; cardNumber++) {
+    for (let faceValue = 0; faceValue < numberOfCards; faceValue++) {
       const position = calculateCardPosition(
-        cardNumber,
+        faceValue,
         shuffle,
         currentRound,
-        animationState,
+        trackTime,
+        scrollHelper,
         windowDimensions.width,
         windowDimensions.height * 0.4, // Card panel is 40% of window height
-        numberOfLanes
+        numberOfLanes,
+        stackOffset
       );
 
       positions.push({
-        cardNumber,
+        cardNumber: faceValue,
         position,
-        color: colors[cardNumber % colors.length],
+        color: colors[faceValue % colors.length],
       });
     }
 
@@ -61,10 +57,12 @@ export function AnimatedCardDeck({
     numberOfCards,
     shuffle,
     currentRound,
-    animationState,
+    trackTime,
+    scrollHelper,
     windowDimensions.width,
     windowDimensions.height,
     numberOfLanes,
+    stackOffset,
     colors,
   ]);
 

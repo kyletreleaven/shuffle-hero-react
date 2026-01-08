@@ -115,18 +115,17 @@ export function getPilePosition(
   totalPiles: number,
   containerWidth: number,
   containerHeight: number,
-  isStacked: boolean = false
+  stackOffset: number = 5
 ): CardPosition {
   const pilePositions = calculatePilePositions(totalPiles, containerWidth);
   const pileX = pilePositions[pileIndex];
 
-  // Vertical offset per card in the pile
-  const stackOffset = isStacked ? 4 : 8; // Tighter stacking in stack phase
+  // Vertical offset per card in the pile (tunable)
   const baseY = containerHeight / 2 - 30;
 
   return {
     x: pileX - 20, // Center the card (card width is 40px)
-    y: baseY + cardIndexInPile * stackOffset,
+    y: baseY - cardIndexInPile * stackOffset, // Stack upward (top card has highest index)
     rotation: 0,
     scale: 1,
   };
@@ -161,80 +160,71 @@ export function interpolatePosition(
 }
 
 /**
- * Calculate the position for a card based on the current animation state
+ * Calculate the position for a card based on the current time in the round
+ * Cards are dealt one at a time, synchronized with notes reaching the beat line
  */
 export function calculateCardPosition(
-  cardNumber: number,
+  faceValue: number,
   shuffle: Shuffle,
   currentRound: number,
-  animationState: AnimationState,
+  trackTime: number,
+  scrollHelper: ScrollHelper,
   containerWidth: number,
   containerHeight: number,
-  numberOfPiles: number
+  numberOfPiles: number,
+  stackOffset: number = 5
 ): CardPosition {
-  const { phase, progress } = animationState;
-
-  // Get the sequence for this round (before dealing)
   const sequence = shuffle.seqs[currentRound];
-  const cardIndexInSequence = sequence.indexOf(cardNumber);
+  const totalCards = sequence.length;
 
-  // Get which pile this card goes to
-  const pileIndex = shuffle.rounds[currentRound][cardNumber];
+  // Find this card's position in the dealing sequence
+  const positionInSequence = sequence.indexOf(faceValue);
 
-  switch (phase) {
-    case 'deal': {
-      // Animate from source sequence to pile
-      const sourcePos = getSourcePosition(cardIndexInSequence, sequence.length, containerWidth, containerHeight);
+  if (positionInSequence === -1) {
+    // Card not in this round's sequence (shouldn't happen)
+    return getSourcePosition(0, totalCards, containerWidth, containerHeight);
+  }
 
-      // Calculate which position this card will have in its pile
-      // Count how many cards before this one in the sequence go to the same pile
-      let cardIndexInPile = 0;
-      for (let i = 0; i < cardIndexInSequence; i++) {
-        const otherCard = sequence[i];
-        if (shuffle.rounds[currentRound][otherCard] === pileIndex) {
-          cardIndexInPile++;
-        }
-      }
+  // Calculate when this card should be dealt
+  // Card i is dealt when note i reaches the beat line
+  const roundStartTime = scrollHelper.minTime + currentRound * scrollHelper.timePerRound;
+  const roundEndTime = roundStartTime + scrollHelper.timePerRound;
 
-      const pilePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, false);
+  // Time when card i completes its deal (when note i reaches beat line)
+  // Distribute card deals evenly across the round
+  const cardDealTime = roundStartTime + (positionInSequence / totalCards) * scrollHelper.timePerRound;
 
-      return interpolatePosition(sourcePos, pilePos, progress, true); // Add rotation during deal
+  // Duration for a single card's deal animation
+  const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
+  const cardDealStartTime = cardDealTime - dealDuration;
+
+  // Get source and target positions
+  const sourcePos = getSourcePosition(positionInSequence, totalCards, containerWidth, containerHeight);
+
+  // Which pile does this card go to?
+  const pileIndex = shuffle.rounds[currentRound][faceValue];
+
+  // How many cards are already in this pile (dealt before this card)?
+  let cardIndexInPile = 0;
+  for (let i = 0; i < positionInSequence; i++) {
+    const otherFaceValue = sequence[i];
+    if (shuffle.rounds[currentRound][otherFaceValue] === pileIndex) {
+      cardIndexInPile++;
     }
+  }
 
-    case 'stack': {
-      // Transition from loose piles to stacked piles
-      let cardIndexInPile = 0;
-      for (let i = 0; i < cardIndexInSequence; i++) {
-        const otherCard = sequence[i];
-        if (shuffle.rounds[currentRound][otherCard] === pileIndex) {
-          cardIndexInPile++;
-        }
-      }
+  const pilePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, stackOffset);
 
-      const loosePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, false);
-      const stackedPos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, true);
-
-      return interpolatePosition(loosePos, stackedPos, progress);
-    }
-
-    case 'collect': {
-      // Animate from piles to final sequence (for next round)
-      let cardIndexInPile = 0;
-      for (let i = 0; i < cardIndexInSequence; i++) {
-        const otherCard = sequence[i];
-        if (shuffle.rounds[currentRound][otherCard] === pileIndex) {
-          cardIndexInPile++;
-        }
-      }
-
-      const stackedPos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, true);
-
-      // Final sequence position (for next round)
-      const nextSequence = shuffle.seqs[currentRound + 1] || sequence;
-      const nextIndex = nextSequence.indexOf(cardNumber);
-      const finalPos = getSourcePosition(nextIndex, nextSequence.length, containerWidth, containerHeight);
-
-      return interpolatePosition(stackedPos, finalPos, progress);
-    }
+  // Determine card state based on current time
+  if (trackTime < cardDealStartTime) {
+    // Card hasn't started dealing yet - stay in source position
+    return sourcePos;
+  } else if (trackTime < cardDealTime) {
+    // Card is currently being dealt - interpolate
+    const dealProgress = (trackTime - cardDealStartTime) / dealDuration;
+    return interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true);
+  } else {
+    // Card has been dealt - stay in pile position
+    return pilePos;
   }
 }
