@@ -78,6 +78,7 @@ export function getSourcePosition(
   const cardWidth = 40;
   const cardHeight = 60;
   const cardSpacing = 2;
+  const goalDeckOffset = 80; // Space reserved for goal deck below
 
   // Calculate how many cards fit in one row
   const availableWidth = containerWidth - 2 * padding;
@@ -92,7 +93,7 @@ export function getSourcePosition(
 
     return {
       x: startX + col * (cardWidth + cardSpacing),
-      y: containerHeight - padding - cardHeight - row * (cardHeight + 10), // Stack rows upward
+      y: containerHeight - padding - cardHeight - goalDeckOffset - row * (cardHeight + 10), // Stack rows upward, with space for goal deck
       rotation: 0,
       scale: 1,
     };
@@ -104,7 +105,7 @@ export function getSourcePosition(
 
   return {
     x: startX + cardIndex * (cardWidth + cardSpacing),
-    y: containerHeight - padding - cardHeight,
+    y: containerHeight - padding - cardHeight - goalDeckOffset,
     rotation: 0,
     scale: 1,
   };
@@ -125,7 +126,9 @@ export function getPilePosition(
   const pileX = pilePositions[pileIndex];
 
   // Vertical offset per card in the pile (tunable)
-  const baseY = containerHeight / 2 - 30;
+  // Position piles in the upper portion of the container, above the goal deck
+  const goalDeckOffset = 80;
+  const baseY = (containerHeight - goalDeckOffset) / 2 - 30;
 
   return {
     x: pileX - 20, // Center the card (card width is 40px)

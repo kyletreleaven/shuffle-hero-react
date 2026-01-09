@@ -71,8 +71,69 @@ export function AnimatedCardDeck({
     permutation,
   ]);
 
+  // Calculate goal deck positions (cards 1..n in order)
+  const goalDeckPositions = useMemo(() => {
+    const positions = [];
+    const padding = 20;
+    const cardHeight = 60;
+    const goalDeckOffset = 80;
+    const containerHeight = windowDimensions.height * 0.4;
+    const goalY = containerHeight - padding - cardHeight; // At the very bottom
+
+    for (let i = 0; i < numberOfCards; i++) {
+      const sourcePos = {
+        x: 0,
+        y: 0,
+      };
+
+      // Use same layout logic as source position
+      const padding = 20;
+      const cardWidth = 40;
+      const cardSpacing = 2;
+      const availableWidth = windowDimensions.width - 2 * padding;
+      const cardsPerRow = Math.floor(availableWidth / (cardWidth + cardSpacing));
+
+      if (numberOfCards > cardsPerRow) {
+        const row = Math.floor(i / cardsPerRow);
+        const col = i % cardsPerRow;
+        const rowWidth = cardsPerRow * (cardWidth + cardSpacing);
+        const startX = (windowDimensions.width - rowWidth) / 2;
+
+        sourcePos.x = startX + col * (cardWidth + cardSpacing);
+        sourcePos.y = goalY + row * 70; // Stack rows downward
+      } else {
+        const totalWidth = numberOfCards * (cardWidth + cardSpacing) - cardSpacing;
+        const startX = (windowDimensions.width - totalWidth) / 2;
+
+        sourcePos.x = startX + i * (cardWidth + cardSpacing);
+        sourcePos.y = goalY;
+      }
+
+      positions.push({
+        cardNumber: i,
+        displayValue: i, // Goal is cards in order: 1, 2, 3, ...
+        position: { ...sourcePos, zIndex: -1 },
+        color: '#333', // Darker color for goal deck
+      });
+    }
+
+    return positions;
+  }, [numberOfCards, windowDimensions.width, windowDimensions.height]);
+
   return (
     <View style={styles.container}>
+      {/* Goal deck - cards 1..n in order */}
+      {goalDeckPositions.map(({ cardNumber, displayValue, position, color }) => (
+        <AnimatedCard
+          key={`goal-${cardNumber}`}
+          cardNumber={cardNumber}
+          displayValue={displayValue}
+          position={position}
+          color={color}
+        />
+      ))}
+
+      {/* Active cards being dealt */}
       {cardPositions.map(({ cardNumber, displayValue, position, color }) => (
         <AnimatedCard
           key={cardNumber}
