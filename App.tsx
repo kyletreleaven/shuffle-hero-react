@@ -1323,6 +1323,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderTopWidth: 2,
     borderTopColor: '#4a4a4a',
+    zIndex: 200, // Above cardOverlay (150) - card zIndex values are confined within overlay's stacking context
   },
   centeredButtons: {
     flexDirection: 'row',
