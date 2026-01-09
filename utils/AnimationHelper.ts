@@ -9,49 +9,55 @@ export type CardPosition = {
 };
 
 /**
- * Function type for calculating a card's centerline x position.
- * @param i - Index of the card (0-based, 0 is leftmost)
+ * Function type for calculating a card's centerline x position in the remaining (undealt) deck.
+ * @param i - Index of the card in the remaining deck (0 = leftmost/next to deal)
  * @param screenWidth - Width of the container
  * @param cardWidth - Width of each card
- * @param numCards - Total number of cards in the deck
+ * @param remainingCards - Number of cards remaining in the deck
  * @returns The x-coordinate of the card's vertical centerline
  */
-export type CardCenterXFn = (
+export type RemainingDeckCardCenterXFn = (
   i: number,
   screenWidth: number,
   cardWidth: number,
-  numCards: number
+  remainingCards: number
 ) => number;
 
 /**
- * Default implementation: evenly spaced, centered on screen.
- * TODO: Replace with decreasing-spacing function
+ * Decreasing-spacing implementation: first cards slightly spread, later cards stack tightly.
+ * Uses logarithmic spacing so visible cards fan out but the bulk of the deck stacks.
+ * Deck is right-aligned at ~75% of screen width (so dealt cards go left).
  */
-export const defaultCardCenterX: CardCenterXFn = (i, screenWidth, cardWidth, numCards) => {
-  if (numCards <= 1) return screenWidth / 2;
+export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, screenWidth, cardWidth, remainingCards) => {
+  if (remainingCards <= 1) return screenWidth * 0.75;
 
-  const spacing = cardWidth * 0.1; // 10% of card width between cards
-  const totalWidth = numCards * cardWidth + (numCards - 1) * spacing;
-  const startX = (screenWidth - totalWidth) / 2 + cardWidth / 2;
+  // Use log curve: position = log(i + 1) / log(n + 1)
+  // This spreads the first few cards and stacks the rest
+  const t = Math.log(i + 1) / Math.log(remainingCards + 1); // 0 to ~1
 
-  return startX + i * (cardWidth + spacing);
+  // Deck spans about 50% of screen width, right-aligned at 75%
+  const deckWidth = screenWidth * 0.5;
+  const deckRightEdge = screenWidth * 0.75 + cardWidth / 2;
+  const deckLeftEdge = deckRightEdge - deckWidth;
+
+  return deckLeftEdge + t * deckWidth;
 };
 
 /**
- * Calculate x-positions for cards in a deck.
+ * Calculate x-positions for cards in the remaining deck.
  * Returns array of left-edge x-positions for each card.
  */
 export function calculateDeckXPositions(
-  totalCards: number,
+  remainingCards: number,
   containerWidth: number,
   cardWidth: number = 40,
-  centerXFn: CardCenterXFn = defaultCardCenterX
+  centerXFn: RemainingDeckCardCenterXFn = defaultRemainingDeckCardCenterX
 ): number[] {
-  if (totalCards === 0) return [];
+  if (remainingCards === 0) return [];
 
   const positions: number[] = [];
-  for (let i = 0; i < totalCards; i++) {
-    const centerX = centerXFn(i, containerWidth, cardWidth, totalCards);
+  for (let i = 0; i < remainingCards; i++) {
+    const centerX = centerXFn(i, containerWidth, cardWidth, remainingCards);
     positions.push(centerX - cardWidth / 2); // Convert centerline to left edge
   }
 
