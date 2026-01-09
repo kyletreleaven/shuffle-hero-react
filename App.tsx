@@ -683,40 +683,16 @@ export default function App() {
     [numberOfCards, windowDimensions.width]
   );
 
-  // Measured positions from placeholder elements
-  // Goal deck is in the top row (if shown), source/deal deck is below it
-  const [goalDeckY, setGoalDeckY] = useState(DECK_ROW_PADDING);
-  const [deckRowY, setDeckRowY] = useState(showGoalDeck ? DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING : (TOP_DECK_HEIGHT_SINGLE - CARD_HEIGHT) / 2);
-  const [stackRowY, setStackRowY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
-  const [trackTopY, setTrackTopY] = useState(topDeckHeight);
-  const [trackBottomY, setTrackBottomY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
+  // Computed positions based on window dimensions (more reliable than onLayout)
+  const BUTTON_ROW_HEIGHT = 70; // Height of bottom button row
+  const goalDeckY = DECK_ROW_PADDING;
+  const deckRowY = showGoalDeck
+    ? DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING
+    : (topDeckHeight - CARD_HEIGHT) / 2;
+  const trackTopY = topDeckHeight;
+  const trackBottomY = windowDimensions.height - BOTTOM_STACK_HEIGHT - BUTTON_ROW_HEIGHT;
+  const stackRowY = trackBottomY + 10; // 10px padding inside stack row
 
-  // Reference to measure scroll content origin position
-  const scrollContentOriginRef = useRef<View>(null);
-  const [scrollContentOriginY, setScrollContentOriginY] = useState(0);
-
-  // Measure scroll content origin whenever scrollY or window dimensions change
-  useLayoutEffect(() => {
-    const measureOrigin = () => {
-      if (!scrollContentOriginRef.current) return;
-
-      if (Platform.OS === 'web') {
-        // On web, use getBoundingClientRect for accurate measurement
-        const element = scrollContentOriginRef.current as any;
-        if (element.getBoundingClientRect) {
-          const rect = element.getBoundingClientRect();
-          setScrollContentOriginY(rect.top);
-        }
-      } else {
-        // On native, use measureInWindow
-        (scrollContentOriginRef.current as any).measureInWindow?.((x: number, y: number) => {
-          setScrollContentOriginY(y);
-        });
-      }
-    };
-
-    measureOrigin();
-  }, [scrollY, windowDimensions.width, windowDimensions.height]);
 
   // Calculate track time and card dealing state
   const trackTime = scrollHelper.trackTime(scrollY);
@@ -887,10 +863,10 @@ export default function App() {
         case 'falling': {
           // Note position (where card should end up)
           // Ghost note is at: left = lane * laneWidth + laneWidth/2 - CARD_WIDTH/2, top = contentY (in scroll content)
-          // Screen Y = scrollContentOriginY + contentY (where scrollContentOriginY accounts for scroll)
+          // Screen Y = contentY - scrollY (scroll view starts at screen y=0)
           const noteX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
           const contentY = scrollHelper.cardY(card.seqIndex);
-          const noteY = scrollContentOriginY + contentY;
+          const noteY = contentY - scrollY;
 
           // Deal animation: quick transition from deck to note position
           const dealAnimationFraction = 0.15; // 15% of fall time for deal animation
@@ -972,7 +948,7 @@ export default function App() {
     });
 
     return positions;
-  }, [cardStates, windowDimensions, deckY, laneWidth, scrollHelper, numberOfCards, numberOfLanes, shuffle, currentRound, stackCounts, stackRowY, scrollContentOriginY]);
+  }, [cardStates, windowDimensions, deckY, laneWidth, scrollY, scrollHelper, numberOfCards, numberOfLanes, shuffle, currentRound, stackCounts, stackRowY]);
 
   return (
     <View style={styles.container}>
@@ -987,11 +963,6 @@ export default function App() {
           onScrollYChange={handleScrollYChange}
           state={autoScrollState}
         >
-          {/* Invisible placeholder to measure scroll content origin */}
-          <View
-            ref={scrollContentOriginRef}
-            style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1 }}
-          />
           <View style={[styles.track, { height: trackHeight, width: windowDimensions.width }]}>
             {/* Render vertical lanes */}
             {Array.from({ length: numberOfLanes }).map((_, index) => (
@@ -1027,31 +998,10 @@ export default function App() {
       </View>
 
       {/* Top deck row - fixed position overlay (background only, decks rendered in cardOverlay) */}
-      <View
-        style={[styles.topDeckRow, { height: topDeckHeight }]}
-        onLayout={(e) => {
-          const { y, height } = e.nativeEvent.layout;
-          if (showGoalDeck) {
-            // Goal deck at top, source deck below it
-            setGoalDeckY(y + DECK_ROW_PADDING);
-            setDeckRowY(y + DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING);
-          } else {
-            // Only source deck, centered vertically
-            setDeckRowY(y + (height - CARD_HEIGHT) / 2);
-          }
-          setTrackTopY(y + height);
-        }}
-      />
+      <View style={[styles.topDeckRow, { height: topDeckHeight }]} />
 
       {/* Bottom stack row - visual background only */}
-      <View
-        style={styles.bottomStackRow}
-        onLayout={(e) => {
-          const { y } = e.nativeEvent.layout;
-          setTrackBottomY(y);
-          setStackRowY(y + 10); // 10px padding inside stack row
-        }}
-      />
+      <View style={styles.bottomStackRow} />
 
       {/* Unified card overlay - all cards rendered with direct positioning */}
       <View style={styles.cardOverlay} pointerEvents="none">
