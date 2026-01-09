@@ -674,33 +674,65 @@ export default function App() {
     calculateDeckXPositions(numberOfCards, windowDimensions.width, CARD_WIDTH),
     [numberOfCards, windowDimensions.width]
   );
-  const deckY = (TOP_DECK_HEIGHT - CARD_HEIGHT) / 2; // Center cards vertically in deck row
+
+  // Measured positions from placeholder elements
+  const [deckRowY, setDeckRowY] = useState(TOP_DECK_HEIGHT / 2 - CARD_HEIGHT / 2);
+  const [stackRowY, setStackRowY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
+  const [trackTopY, setTrackTopY] = useState(TOP_DECK_HEIGHT);
+  const [trackBottomY, setTrackBottomY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
+
+  // Reference to measure scroll content origin position
+  const scrollContentOriginRef = useRef<View>(null);
+  const [scrollContentOriginY, setScrollContentOriginY] = useState(0);
+
+  // Measure scroll content origin whenever scrollY or window dimensions change
+  useLayoutEffect(() => {
+    const measureOrigin = () => {
+      if (!scrollContentOriginRef.current) return;
+
+      if (Platform.OS === 'web') {
+        // On web, use getBoundingClientRect for accurate measurement
+        const element = scrollContentOriginRef.current as any;
+        if (element.getBoundingClientRect) {
+          const rect = element.getBoundingClientRect();
+          setScrollContentOriginY(rect.top);
+        }
+      } else {
+        // On native, use measureInWindow
+        (scrollContentOriginRef.current as any).measureInWindow?.((x: number, y: number) => {
+          setScrollContentOriginY(y);
+        });
+      }
+    };
+
+    measureOrigin();
+  }, [scrollY, windowDimensions.width, windowDimensions.height]);
 
   // Calculate track time and card dealing state
   const trackTime = scrollHelper.trackTime(scrollY);
 
-  // Calculate visible track area height (between deck row and stack row)
-  const trackVisibleHeight = windowDimensions.height - TOP_DECK_HEIGHT - BOTTOM_STACK_HEIGHT - 70;
+  // Use measured positions for key landmarks
+  const trackTopScreenY = trackTopY;
+  const trackBottomScreenY = trackBottomY;
+  const deckY = deckRowY;
 
-  // Helper to get when a card enters the screen (top of visible track)
+  // Helper to get when a card enters the visible area (appears below deck row)
   const getCardEnterTime = useCallback((pos: number) => {
     const contentY = scrollHelper.cardY(pos);
-    // Card enters when its top reaches the top of visible track area
-    // Screen Y = contentY - scrollY + TOP_DECK_HEIGHT = TOP_DECK_HEIGHT
-    // So scrollY = contentY
-    const scrollYAtEnter = contentY;
+    // Card enters when: contentY - scrollY = trackTopScreenY
+    // So: scrollY = contentY - trackTopScreenY
+    const scrollYAtEnter = contentY - trackTopScreenY;
     return scrollHelper.trackTime(scrollYAtEnter);
-  }, [scrollHelper]);
+  }, [scrollHelper, trackTopScreenY]);
 
-  // Helper to get when a card exits the screen (bottom of visible track)
+  // Helper to get when a card exits the visible area (reaches stack row)
   const getCardExitTime = useCallback((pos: number) => {
     const contentY = scrollHelper.cardY(pos);
-    // Card exits when its bottom reaches the bottom of visible track area
-    // Screen Y = contentY - scrollY + TOP_DECK_HEIGHT = windowHeight - BOTTOM_STACK_HEIGHT - 70
-    // scrollY = contentY - trackVisibleHeight
-    const scrollYAtExit = contentY - trackVisibleHeight;
+    // Card exits when: contentY - scrollY = trackBottomScreenY
+    // So: scrollY = contentY - trackBottomScreenY
+    const scrollYAtExit = contentY - trackBottomScreenY;
     return scrollHelper.trackTime(scrollYAtExit);
-  }, [scrollHelper, trackVisibleHeight]);
+  }, [scrollHelper, trackBottomScreenY]);
 
   // Calculate which cards are in which state
   const cardStates = useMemo(() => {
@@ -813,7 +845,7 @@ export default function App() {
 
     // Stack layout constants
     const STACK_OFFSET = 8;
-    const stackTopScreenY = windowDimensions.height - BOTTOM_STACK_HEIGHT - 70 + 10;
+    const stackTopScreenY = stackRowY;
 
     let deckIndex = 0;
 
@@ -832,9 +864,11 @@ export default function App() {
 
         case 'falling': {
           // Note position (where card should end up)
+          // Ghost note is at: left = lane * laneWidth + laneWidth/2 - CARD_WIDTH/2, top = contentY (in scroll content)
+          // Screen Y = scrollContentOriginY + contentY (where scrollContentOriginY accounts for scroll)
           const noteX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
           const contentY = scrollHelper.cardY(card.seqIndex);
-          const noteY = contentY - scrollY + TOP_DECK_HEIGHT;
+          const noteY = scrollContentOriginY + contentY;
 
           // Deal animation: quick transition from deck to note position
           const dealAnimationFraction = 0.15; // 15% of fall time for deal animation
@@ -845,9 +879,15 @@ export default function App() {
             const t = dealProgress / dealAnimationFraction;
             const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
 
-            // Deck position (where card was before dealing)
-            // Use the position it would have had in a full deck at top
-            const deckCardX = fullDeckPositions[card.seqIndex] ?? windowDimensions.width / 2 - CARD_WIDTH / 2;
+            // Deck position: this card was at position 0 in remaining deck when dealing started
+            // Remaining deck size at deal start = numberOfCards - seqIndex
+            const remainingAtDealStart = numberOfCards - card.seqIndex;
+            const remainingDeckPositionsAtDeal = calculateDeckXPositions(
+              remainingAtDealStart,
+              windowDimensions.width,
+              CARD_WIDTH
+            );
+            const deckCardX = remainingDeckPositionsAtDeal[0] ?? windowDimensions.width / 2 - CARD_WIDTH / 2;
             const deckCardY = deckY;
 
             x = deckCardX + (noteX - deckCardX) * eased;
@@ -910,7 +950,7 @@ export default function App() {
     });
 
     return positions;
-  }, [cardStates, windowDimensions, deckY, laneWidth, scrollY, scrollHelper, numberOfCards, numberOfLanes, shuffle, currentRound, stackCounts]);
+  }, [cardStates, windowDimensions, deckY, laneWidth, scrollHelper, numberOfCards, numberOfLanes, shuffle, currentRound, stackCounts, stackRowY, scrollContentOriginY]);
 
   return (
     <View style={styles.container}>
@@ -925,6 +965,11 @@ export default function App() {
           onScrollYChange={handleScrollYChange}
           state={autoScrollState}
         >
+          {/* Invisible placeholder to measure scroll content origin */}
+          <View
+            ref={scrollContentOriginRef}
+            style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 1 }}
+          />
           <View style={[styles.track, { height: trackHeight, width: windowDimensions.width }]}>
             {/* Render vertical lanes */}
             {Array.from({ length: numberOfLanes }).map((_, index) => (
@@ -960,7 +1005,14 @@ export default function App() {
       </View>
 
       {/* Top deck row - fixed position overlay (goal deck only) */}
-      <View style={styles.topDeckRow}>
+      <View
+        style={styles.topDeckRow}
+        onLayout={(e) => {
+          const { y, height } = e.nativeEvent.layout;
+          setDeckRowY(y + (height - CARD_HEIGHT) / 2);
+          setTrackTopY(y + height);
+        }}
+      >
         {/* Goal deck (dimmed, behind) - shows target permutation */}
         {permutation.map((faceValue, displayIndex) => (
           <View
@@ -970,7 +1022,7 @@ export default function App() {
               styles.goalDeckCard,
               {
                 left: deckXPositions[displayIndex],
-                top: deckY,
+                top: (TOP_DECK_HEIGHT - CARD_HEIGHT) / 2,
                 zIndex: -1 - displayIndex,
               },
             ]}
@@ -981,7 +1033,14 @@ export default function App() {
       </View>
 
       {/* Bottom stack row - visual background only */}
-      <View style={styles.bottomStackRow} />
+      <View
+        style={styles.bottomStackRow}
+        onLayout={(e) => {
+          const { y } = e.nativeEvent.layout;
+          setTrackBottomY(y);
+          setStackRowY(y + 10); // 10px padding inside stack row
+        }}
+      />
 
       {/* Unified card overlay - all cards rendered with direct positioning */}
       <View style={styles.cardOverlay} pointerEvents="none">
