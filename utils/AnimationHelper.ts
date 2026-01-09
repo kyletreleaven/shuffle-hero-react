@@ -266,15 +266,30 @@ export function calculateCardPosition(
     // Card has been dealt - stay in pile position
     return { ...pilePos, zIndex: baseZIndex };
   } else {
-    // Collect phase - animate piles to new deck
+    // Collect phase - animate piles to new deck sequentially
     const nextSequence = shuffle.seqs[currentRound + 1] || sequence;
     const nextPositionInSequence = nextSequence.indexOf(faceValue);
     const finalPos = getSourcePosition(nextPositionInSequence, totalCards, containerWidth, containerHeight);
 
-    const collectProgress = (trackTime - collectPhaseStart) / (collectPhaseEnd - collectPhaseStart);
-    return {
-      ...interpolatePosition(pilePos, finalPos, Math.min(1, collectProgress), false),
-      zIndex: baseZIndex
-    };
+    // Collect piles sequentially: pile 0 first, then pile 1, etc.
+    const totalCollectTime = collectPhaseEnd - collectPhaseStart;
+    const timePerPile = totalCollectTime / numberOfPiles;
+    const pileCollectStart = collectPhaseStart + pileIndex * timePerPile;
+    const pileCollectEnd = pileCollectStart + timePerPile;
+
+    if (trackTime < pileCollectStart) {
+      // This pile hasn't started collecting yet
+      return { ...pilePos, zIndex: baseZIndex };
+    } else if (trackTime < pileCollectEnd) {
+      // This pile is currently being collected
+      const pileProgress = (trackTime - pileCollectStart) / timePerPile;
+      return {
+        ...interpolatePosition(pilePos, finalPos, Math.min(1, pileProgress), false),
+        zIndex: baseZIndex
+      };
+    } else {
+      // This pile has finished collecting
+      return { ...finalPos, zIndex: baseZIndex };
+    }
   }
 }
