@@ -1079,8 +1079,8 @@ export default function App() {
         ))}
       </View>
 
-      {/* Time Remaining Display */}
-      <View style={styles.timeDisplay}>
+      {/* Time Remaining Display - positioned over the track, below deck row */}
+      <View style={[styles.timeDisplay, { top: topDeckHeight + 10 }]}>
         <Text style={styles.timeText}>
           {scrollSpeed > 0 ? (() => {
             const timePerRound = scrollHelper.timePerRound;
@@ -1547,6 +1547,7 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 250, // Above top deck row and card overlay
   },
   timeText: {
     color: '#c9b620ff',
