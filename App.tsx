@@ -866,31 +866,66 @@ export default function App() {
             <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
           </View>
         ))}
-        {/* Source deck - only show cards still in deck */}
+        {/* Source deck - show cards in deck or collected state */}
         {(() => {
+          // Cards in deck state (not yet dealt)
           const deckCards = cardStates.filter(c => c.state === 'deck');
-          // Recalculate positions based on remaining deck size
           const remainingDeckPositions = calculateDeckXPositions(
             deckCards.length,
             windowDimensions.width,
             CARD_WIDTH
           );
-          return deckCards.map((card, indexInRemaining) => (
-            <View
-              key={`source-${card.faceValue}`}
-              style={[
-                styles.deckCard,
-                {
-                  backgroundColor: NOTE_COLORS[card.lane % NOTE_COLORS.length],
-                  left: remainingDeckPositions[indexInRemaining],
-                  top: deckY,
-                  zIndex: deckCards.length - indexInRemaining,
-                },
-              ]}
-            >
-              <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
-            </View>
-          ));
+
+          // Cards that have been collected (finished collection animation)
+          const collectedCards = cardStates.filter(c => c.state === 'collected');
+          const nextSequence = shuffle.seqs[currentRound + 1];
+          const collectedDeckPositions = calculateDeckXPositions(
+            numberOfCards,
+            windowDimensions.width,
+            CARD_WIDTH
+          );
+
+          return (
+            <>
+              {/* Deck cards (not yet dealt) */}
+              {deckCards.map((card, indexInRemaining) => (
+                <View
+                  key={`source-${card.faceValue}`}
+                  style={[
+                    styles.deckCard,
+                    {
+                      backgroundColor: NOTE_COLORS[card.lane % NOTE_COLORS.length],
+                      left: remainingDeckPositions[indexInRemaining],
+                      top: deckY,
+                      zIndex: deckCards.length - indexInRemaining,
+                    },
+                  ]}
+                >
+                  <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
+                </View>
+              ))}
+              {/* Collected cards (finished collection, ready for next round) */}
+              {collectedCards.map(card => {
+                const nextSeqIndex = nextSequence?.indexOf(card.faceValue) ?? card.seqIndex;
+                return (
+                  <View
+                    key={`collected-${card.faceValue}`}
+                    style={[
+                      styles.deckCard,
+                      {
+                        backgroundColor: NOTE_COLORS[card.lane % NOTE_COLORS.length],
+                        left: collectedDeckPositions[nextSeqIndex],
+                        top: deckY,
+                        zIndex: numberOfCards - nextSeqIndex,
+                      },
+                    ]}
+                  >
+                    <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
+                  </View>
+                );
+              })}
+            </>
+          );
         })()}
       </View>
 
@@ -1110,10 +1145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a1a',
   },
-  trackPanel: {
-    flex: 0.6,
-    position: 'relative',
-  },
   trackPanelFull: {
     flex: 1,
     position: 'relative',
@@ -1173,6 +1204,13 @@ const styles = StyleSheet.create({
     opacity: 0.3,
     borderColor: '#666',
   },
+  collectingCard: {
+    position: 'absolute',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   deckCardNumber: {
     color: '#fff',
     fontSize: 14,
@@ -1215,21 +1253,6 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderColor: '#4a4a4a',
   },
-  note: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   ghostNote: {
     position: 'absolute',
     width: 60,
@@ -1245,14 +1268,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     opacity: 0.7,
-  },
-  noteNumber: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   debugHUD: {
     position: 'absolute',
