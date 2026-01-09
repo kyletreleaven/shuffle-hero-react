@@ -979,7 +979,8 @@ export default function App() {
       <View style={styles.bottomStackRow}>
         {/* Render landing stacks for each lane */}
         {stackCards.map((stack, laneIndex) => {
-          const stackX = laneIndex * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
+          // Card X is relative to container, centered in lane
+          const cardXInContainer = laneWidth / 2 - CARD_WIDTH / 2;
           const STACK_OFFSET = 8; // How much each card pushes down
           const stackTopY = 10; // Top padding in stack area
 
@@ -998,7 +999,7 @@ export default function App() {
                       styles.deckCard,
                       {
                         backgroundColor: cardColor,
-                        left: stackX,
+                        left: cardXInContainer,
                         top: cardY,
                         zIndex: stack.length - stackIndex, // Newest on top
                       },
