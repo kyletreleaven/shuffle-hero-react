@@ -1072,7 +1072,7 @@ export default function App() {
             <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>
           </View>
         ))}
-        {/* Goal deck (dimmed, in row above source deck) - shows target permutation */}
+        {/* Goal deck (in row above source deck) - shows target permutation */}
         {showGoalDeck && permutation.map((faceValue, displayIndex) => (
           <View
             key={`goal-${displayIndex}`}
@@ -1082,7 +1082,7 @@ export default function App() {
               {
                 left: deckXPositions[displayIndex],
                 top: goalDeckY,
-                zIndex: 2000 + displayIndex,
+                zIndex: numberOfCards - displayIndex, // Earlier cards on top, below source deck
               },
             ]}
           >
@@ -1305,9 +1305,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   goalDeckCard: {
-    backgroundColor: '#333',
-    opacity: 0.3,
-    borderColor: '#666',
+    backgroundColor: '#444',
+    borderColor: '#888',
   },
   deckCardNumber: {
     color: '#fff',
