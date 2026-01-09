@@ -6,14 +6,19 @@ import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
-import { ViewModeToggle } from './components/ViewModeToggle';
-import { AnimatedCardDeck } from './components/AnimatedCardDeck';
+// TODO: Remove these imports once unified view is complete
+// import { ViewModeToggle } from './components/ViewModeToggle';
+// import { AnimatedCardDeck } from './components/AnimatedCardDeck';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
 const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
+
+// Unified track view layout constants
+const TOP_DECK_HEIGHT = 100;     // Height for source/goal deck row at top
+const BOTTOM_STACK_HEIGHT = 100; // Height for landing stacks at bottom
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -513,7 +518,6 @@ export default function App() {
   // Game settings - initialize with defaults, will load saved values in effect
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
-  const [viewMode, setViewMode] = useState<'track' | 'split'>('track');
 
   type ShuffleState = {
     permutation: number[];
@@ -663,10 +667,12 @@ export default function App() {
 
   const handleScrollYChange = setScrollY;
 
+  const laneWidth = windowDimensions.width / numberOfLanes;
+
   return (
     <View style={styles.container}>
-      {/* Track view panel (60% in split mode, 100% in track mode) */}
-      <View style={viewMode === 'split' ? styles.trackPanel : styles.trackPanelFull}>
+      {/* Main track area - full height scrollable */}
+      <View style={styles.trackPanelFull}>
         <AutoScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -688,44 +694,44 @@ export default function App() {
               />
             ))}
 
-            {/* Render notes */}
-            {notes.map((note) => {
-              const laneWidth = windowDimensions.width / numberOfLanes;
-              return (
-                <View
-                  key={note.id}
-                  style={[
-                    styles.note,
-                    {
-                      backgroundColor: note.color,
-                      left: note.lane * laneWidth + laneWidth / 2 - 30,
-                      top: note.position,
-                    },
-                  ]}
-                >
-                  <Text style={styles.noteNumber}>{note.id + 1}</Text>
-                </View>
-              );
-            })}
+            {/* Render ghost notes (dashed outlines) */}
+            {notes.map((note) => (
+              <View
+                key={note.id}
+                style={[
+                  styles.ghostNote,
+                  {
+                    borderColor: note.color,
+                    left: note.lane * laneWidth + laneWidth / 2 - 30,
+                    top: note.position,
+                  },
+                ]}
+              >
+                <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
+              </View>
+            ))}
+
+            {/* TODO: Render falling cards here (in track coordinate space) */}
           </View>
         </AutoScrollView>
       </View>
 
-      {/* Card animation panel (40% height, only visible in split mode) */}
-      {viewMode === 'split' && (
-        <View style={styles.cardPanel}>
-          <AnimatedCardDeck
-            shuffle={shuffle}
-            currentRound={currentRound}
-            numberOfCards={numberOfCards}
-            numberOfLanes={numberOfLanes}
-            trackTime={scrollHelper.trackTime(scrollY)}
-            scrollHelper={scrollHelper}
-            colors={NOTE_COLORS}
-            permutation={permutation}
-          />
-        </View>
-      )}
+      {/* Top deck row - fixed position overlay */}
+      <View style={styles.topDeckRow}>
+        {/* TODO: Render goal deck (dimmed, behind) */}
+        {/* TODO: Render source deck */}
+        <Text style={styles.placeholderText}>Source Deck</Text>
+      </View>
+
+      {/* Bottom stack row - fixed position overlay */}
+      <View style={styles.bottomStackRow}>
+        {/* TODO: Render landing stacks for each lane */}
+        {Array.from({ length: numberOfLanes }).map((_, index) => (
+          <View key={index} style={[styles.stackPlaceholder, { width: laneWidth }]}>
+            <Text style={styles.stackPlaceholderText}>Stack {index}</Text>
+          </View>
+        ))}
+      </View>
 
       {/* Time Remaining Display */}
       <View style={styles.timeDisplay}>
@@ -796,11 +802,6 @@ export default function App() {
           >
             <Text style={styles.buttonText}>Restart</Text>
           </TouchableOpacity>
-          <ViewModeToggle
-            viewMode={viewMode}
-            onToggle={() => setViewMode(viewMode === 'track' ? 'split' : 'track')}
-            disabled={inhibitAutoScroll}
-          />
           <View style={styles.navigationButtons}>
             <TouchableOpacity
               style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
@@ -872,11 +873,41 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
   },
-  cardPanel: {
-    flex: 0.4,
-    backgroundColor: '#0a0a0a',
+  topDeckRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: TOP_DECK_HEIGHT,
+    backgroundColor: 'rgba(10, 10, 10, 0.9)',
+    borderBottomWidth: 2,
+    borderBottomColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  bottomStackRow: {
+    position: 'absolute',
+    bottom: 70, // Above the bottom button row
+    left: 0,
+    right: 0,
+    height: BOTTOM_STACK_HEIGHT,
+    backgroundColor: 'rgba(10, 10, 10, 0.9)',
     borderTopWidth: 2,
     borderTopColor: '#333',
+    flexDirection: 'row',
+    zIndex: 100,
+  },
+  stackPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#333',
+  },
+  stackPlaceholderText: {
+    color: '#666',
+    fontSize: 12,
   },
   placeholderText: {
     color: '#666',
@@ -916,6 +947,22 @@ const styles = StyleSheet.create({
     elevation: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  ghostNote: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ghostNoteNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    opacity: 0.7,
   },
   noteNumber: {
     color: '#fff',
