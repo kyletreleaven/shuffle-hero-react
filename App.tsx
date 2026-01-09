@@ -679,19 +679,29 @@ export default function App() {
 
   // Calculate track time and card dealing state
   const trackTime = scrollHelper.trackTime(scrollY);
-  const actualTrackHeight = windowDimensions.height; // Full height now
 
-  // Helper to get deal timing for a card at a given position in sequence
-  const getDealStartTime = useCallback((pos: number) => {
-    const yPos = scrollHelper.cardY(pos);
-    const beatLineOffset = actualTrackHeight / 2;
-    const scrollYAtBeatLine = yPos - beatLineOffset;
-    const beatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
-    const dealDuration = scrollHelper.timePerRound / (numberOfCards * 2);
-    return beatLineTime - dealDuration;
-  }, [scrollHelper, actualTrackHeight, numberOfCards]);
+  // Calculate visible track area height (between deck row and stack row)
+  const trackVisibleHeight = windowDimensions.height - TOP_DECK_HEIGHT - BOTTOM_STACK_HEIGHT - 70;
 
-  const dealDuration = scrollHelper.timePerRound / (numberOfCards * 2);
+  // Helper to get when a card enters the screen (top of visible track)
+  const getCardEnterTime = useCallback((pos: number) => {
+    const contentY = scrollHelper.cardY(pos);
+    // Card enters when its top reaches the top of visible track area
+    // Screen Y = contentY - scrollY + TOP_DECK_HEIGHT = TOP_DECK_HEIGHT
+    // So scrollY = contentY
+    const scrollYAtEnter = contentY;
+    return scrollHelper.trackTime(scrollYAtEnter);
+  }, [scrollHelper]);
+
+  // Helper to get when a card exits the screen (bottom of visible track)
+  const getCardExitTime = useCallback((pos: number) => {
+    const contentY = scrollHelper.cardY(pos);
+    // Card exits when its bottom reaches the bottom of visible track area
+    // Screen Y = contentY - scrollY + TOP_DECK_HEIGHT = windowHeight - BOTTOM_STACK_HEIGHT - 70
+    // scrollY = contentY - trackVisibleHeight
+    const scrollYAtExit = contentY - trackVisibleHeight;
+    return scrollHelper.trackTime(scrollYAtExit);
+  }, [scrollHelper, trackVisibleHeight]);
 
   // Calculate which cards are in which state
   const cardStates = useMemo(() => {
@@ -703,13 +713,13 @@ export default function App() {
       state: 'deck' | 'falling' | 'stack' | 'collecting' | 'collected';
       dealProgress?: number;
       collectProgress?: number;
-      stackIndex?: number; // Position in stack (0 = top/newest)
+      stackIndex?: number; // Position in stack (0 = first dealt to this pile)
     }> = [];
 
-    // Calculate collect phase timing
-    const lastCardDealTime = getDealStartTime(numberOfCards - 1) + dealDuration;
+    // Calculate collect phase timing - starts after last card exits screen
+    const lastCardExitTime = getCardExitTime(numberOfCards - 1);
     const pauseBeforeCollect = 0.5;
-    const collectPhaseStart = Math.min(lastCardDealTime + pauseBeforeCollect, scrollHelper.maxTime - 0.5);
+    const collectPhaseStart = Math.min(lastCardExitTime + pauseBeforeCollect, scrollHelper.maxTime - 0.5);
     const collectPhaseEnd = scrollHelper.maxTime;
     const totalCollectTime = collectPhaseEnd - collectPhaseStart;
     const timePerPile = totalCollectTime / numberOfLanes;
@@ -720,20 +730,26 @@ export default function App() {
     for (let seqIndex = 0; seqIndex < sequence.length; seqIndex++) {
       const faceValue = sequence[seqIndex];
       const lane = shuffle.rounds[currentRound][faceValue];
-      const cardDealStartTime = getDealStartTime(seqIndex);
-      const cardDealEndTime = cardDealStartTime + dealDuration;
+
+      // Card enters screen (starts falling) when note appears at top
+      const cardEnterTime = getCardEnterTime(seqIndex);
+      // Card exits screen (lands on stack) when note disappears at bottom
+      const cardExitTime = getCardExitTime(seqIndex);
 
       let state: 'deck' | 'falling' | 'stack' | 'collecting' | 'collected';
       let dealProgress: number | undefined;
       let collectProgress: number | undefined;
       let stackIndex: number | undefined;
 
-      if (trackTime < cardDealStartTime) {
+      if (trackTime < cardEnterTime) {
+        // Card hasn't appeared on screen yet - still in deck
         state = 'deck';
-      } else if (trackTime < cardDealEndTime) {
+      } else if (trackTime < cardExitTime) {
+        // Card is visible on screen - falling with its ghost note
         state = 'falling';
-        dealProgress = (trackTime - cardDealStartTime) / dealDuration;
+        dealProgress = (trackTime - cardEnterTime) / (cardExitTime - cardEnterTime);
       } else if (trackTime < collectPhaseStart) {
+        // Card has exited screen - now in stack
         state = 'stack';
         stackIndex = pilesLandedCount[lane];
         pilesLandedCount[lane]++;
@@ -758,7 +774,7 @@ export default function App() {
     }
 
     return states;
-  }, [shuffle, currentRound, trackTime, numberOfCards, numberOfLanes, getDealStartTime, dealDuration, scrollHelper]);
+  }, [shuffle, currentRound, trackTime, numberOfCards, numberOfLanes, getCardEnterTime, getCardExitTime, scrollHelper]);
 
   // Count cards per stack for positioning
   const stackCounts = useMemo(() => {
