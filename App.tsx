@@ -6,9 +6,7 @@ import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
-// TODO: Remove these imports once unified view is complete
-// import { ViewModeToggle } from './components/ViewModeToggle';
-// import { AnimatedCardDeck } from './components/AnimatedCardDeck';
+import { calculateDeckXPositions } from './utils/AnimationHelper';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
@@ -19,6 +17,8 @@ const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user pre
 // Unified track view layout constants
 const TOP_DECK_HEIGHT = 100;     // Height for source/goal deck row at top
 const BOTTOM_STACK_HEIGHT = 100; // Height for landing stacks at bottom
+const CARD_WIDTH = 40;
+const CARD_HEIGHT = 60;
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -669,6 +669,112 @@ export default function App() {
 
   const laneWidth = windowDimensions.width / numberOfLanes;
 
+  // Calculate deck positions for source and goal decks
+  const deckXPositions = useMemo(() =>
+    calculateDeckXPositions(numberOfCards, windowDimensions.width, CARD_WIDTH),
+    [numberOfCards, windowDimensions.width]
+  );
+  const deckY = (TOP_DECK_HEIGHT - CARD_HEIGHT) / 2; // Center cards vertically in deck row
+
+  // Calculate track time and card dealing state
+  const trackTime = scrollHelper.trackTime(scrollY);
+  const actualTrackHeight = windowDimensions.height; // Full height now
+
+  // Helper to get deal timing for a card at a given position in sequence
+  const getDealStartTime = useCallback((pos: number) => {
+    const yPos = scrollHelper.cardY(pos);
+    const beatLineOffset = actualTrackHeight / 2;
+    const scrollYAtBeatLine = yPos - beatLineOffset;
+    const beatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
+    const dealDuration = scrollHelper.timePerRound / (numberOfCards * 2);
+    return beatLineTime - dealDuration;
+  }, [scrollHelper, actualTrackHeight, numberOfCards]);
+
+  const dealDuration = scrollHelper.timePerRound / (numberOfCards * 2);
+
+  // Calculate which cards are in which state
+  const cardStates = useMemo(() => {
+    const sequence = shuffle.seqs[currentRound];
+    const states: Array<{
+      faceValue: number;
+      seqIndex: number;
+      lane: number;
+      state: 'deck' | 'falling' | 'stack' | 'collecting' | 'collected';
+      dealProgress?: number;
+      collectProgress?: number;
+      stackIndex?: number; // Position in stack (0 = top/newest)
+    }> = [];
+
+    // Calculate collect phase timing
+    const lastCardDealTime = getDealStartTime(numberOfCards - 1) + dealDuration;
+    const pauseBeforeCollect = 0.5;
+    const collectPhaseStart = Math.min(lastCardDealTime + pauseBeforeCollect, scrollHelper.maxTime - 0.5);
+    const collectPhaseEnd = scrollHelper.maxTime;
+    const totalCollectTime = collectPhaseEnd - collectPhaseStart;
+    const timePerPile = totalCollectTime / numberOfLanes;
+
+    // Track cards per pile for stack index calculation
+    const pilesLandedCount: number[] = Array(numberOfLanes).fill(0);
+
+    for (let seqIndex = 0; seqIndex < sequence.length; seqIndex++) {
+      const faceValue = sequence[seqIndex];
+      const lane = shuffle.rounds[currentRound][faceValue];
+      const cardDealStartTime = getDealStartTime(seqIndex);
+      const cardDealEndTime = cardDealStartTime + dealDuration;
+
+      let state: 'deck' | 'falling' | 'stack' | 'collecting' | 'collected';
+      let dealProgress: number | undefined;
+      let collectProgress: number | undefined;
+      let stackIndex: number | undefined;
+
+      if (trackTime < cardDealStartTime) {
+        state = 'deck';
+      } else if (trackTime < cardDealEndTime) {
+        state = 'falling';
+        dealProgress = (trackTime - cardDealStartTime) / dealDuration;
+      } else if (trackTime < collectPhaseStart) {
+        state = 'stack';
+        stackIndex = pilesLandedCount[lane];
+        pilesLandedCount[lane]++;
+      } else {
+        // In collect phase - check if this pile has started/finished collecting
+        const pileCollectStart = collectPhaseStart + lane * timePerPile;
+        const pileCollectEnd = pileCollectStart + timePerPile;
+
+        if (trackTime < pileCollectStart) {
+          state = 'stack';
+          stackIndex = pilesLandedCount[lane];
+          pilesLandedCount[lane]++;
+        } else if (trackTime < pileCollectEnd) {
+          state = 'collecting';
+          collectProgress = (trackTime - pileCollectStart) / timePerPile;
+        } else {
+          state = 'collected';
+        }
+      }
+
+      states.push({ faceValue, seqIndex, lane, state, dealProgress, collectProgress, stackIndex });
+    }
+
+    return states;
+  }, [shuffle, currentRound, trackTime, numberOfCards, numberOfLanes, getDealStartTime, dealDuration, scrollHelper]);
+
+  // Group cards by lane for stack rendering
+  const stackCards = useMemo(() => {
+    const stacks: Array<Array<{ faceValue: number; stackIndex: number }>> = Array.from(
+      { length: numberOfLanes },
+      () => []
+    );
+
+    cardStates.forEach(card => {
+      if (card.state === 'stack' && card.stackIndex !== undefined) {
+        stacks[card.lane].push({ faceValue: card.faceValue, stackIndex: card.stackIndex });
+      }
+    });
+
+    return stacks;
+  }, [cardStates, numberOfLanes]);
+
   return (
     <View style={styles.container}>
       {/* Main track area - full height scrollable */}
@@ -711,26 +817,165 @@ export default function App() {
               </View>
             ))}
 
-            {/* TODO: Render falling cards here (in track coordinate space) */}
+            {/* Render falling cards (in track coordinate space) */}
+            {cardStates
+              .filter(card => card.state === 'falling')
+              .map(card => {
+                // Card position follows its ghost note position
+                const cardX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
+                const cardY = scrollHelper.cardY(card.seqIndex) - CARD_HEIGHT / 2 + 30; // Offset to center on ghost note
+                const cardColor = NOTE_COLORS[card.lane % NOTE_COLORS.length];
+
+                return (
+                  <View
+                    key={`falling-${card.faceValue}`}
+                    style={[
+                      styles.fallingCard,
+                      {
+                        backgroundColor: cardColor,
+                        left: cardX,
+                        top: cardY,
+                        zIndex: 1000 + card.seqIndex, // Above ghost notes
+                      },
+                    ]}
+                  >
+                    <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
+                  </View>
+                );
+              })}
           </View>
         </AutoScrollView>
       </View>
 
       {/* Top deck row - fixed position overlay */}
       <View style={styles.topDeckRow}>
-        {/* TODO: Render goal deck (dimmed, behind) */}
-        {/* TODO: Render source deck */}
-        <Text style={styles.placeholderText}>Source Deck</Text>
+        {/* Goal deck (dimmed, behind) - shows target permutation */}
+        {permutation.map((faceValue, displayIndex) => (
+          <View
+            key={`goal-${displayIndex}`}
+            style={[
+              styles.deckCard,
+              styles.goalDeckCard,
+              {
+                left: deckXPositions[displayIndex],
+                top: deckY,
+                zIndex: -1 - displayIndex,
+              },
+            ]}
+          >
+            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+          </View>
+        ))}
+        {/* Source deck - only show cards still in deck */}
+        {(() => {
+          const deckCards = cardStates.filter(c => c.state === 'deck');
+          // Recalculate positions based on remaining deck size
+          const remainingDeckPositions = calculateDeckXPositions(
+            deckCards.length,
+            windowDimensions.width,
+            CARD_WIDTH
+          );
+          return deckCards.map((card, indexInRemaining) => (
+            <View
+              key={`source-${card.faceValue}`}
+              style={[
+                styles.deckCard,
+                {
+                  backgroundColor: NOTE_COLORS[card.lane % NOTE_COLORS.length],
+                  left: remainingDeckPositions[indexInRemaining],
+                  top: deckY,
+                  zIndex: deckCards.length - indexInRemaining,
+                },
+              ]}
+            >
+              <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
+            </View>
+          ));
+        })()}
       </View>
+
+      {/* Collecting cards - animate from stack to deck (fixed overlay) */}
+      {cardStates
+        .filter(card => card.state === 'collecting' && card.collectProgress !== undefined)
+        .map(card => {
+          const progress = card.collectProgress!;
+          // Ease-out cubic
+          const t = 1 - Math.pow(1 - progress, 3);
+
+          // Start position (stack)
+          const stackX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
+          const stackY = windowDimensions.height - BOTTOM_STACK_HEIGHT - 70 + 10; // bottom row top + padding
+
+          // End position (top deck)
+          const nextSequence = shuffle.seqs[currentRound + 1];
+          const nextSeqIndex = nextSequence?.indexOf(card.faceValue) ?? card.seqIndex;
+          const collectedDeckPositions = calculateDeckXPositions(
+            numberOfCards,
+            windowDimensions.width,
+            CARD_WIDTH
+          );
+          const deckCardX = collectedDeckPositions[nextSeqIndex];
+
+          // Interpolate
+          const currentX = stackX + (deckCardX - stackX) * t;
+          const currentY = stackY + (deckY - stackY) * t;
+          const cardColor = NOTE_COLORS[card.lane % NOTE_COLORS.length];
+
+          return (
+            <View
+              key={`collecting-${card.faceValue}`}
+              style={[
+                styles.deckCard,
+                styles.collectingCard,
+                {
+                  backgroundColor: cardColor,
+                  left: currentX,
+                  top: currentY,
+                  zIndex: 200 + card.seqIndex,
+                },
+              ]}
+            >
+              <Text style={styles.deckCardNumber}>{card.faceValue + 1}</Text>
+            </View>
+          );
+        })}
 
       {/* Bottom stack row - fixed position overlay */}
       <View style={styles.bottomStackRow}>
-        {/* TODO: Render landing stacks for each lane */}
-        {Array.from({ length: numberOfLanes }).map((_, index) => (
-          <View key={index} style={[styles.stackPlaceholder, { width: laneWidth }]}>
-            <Text style={styles.stackPlaceholderText}>Stack {index}</Text>
-          </View>
-        ))}
+        {/* Render landing stacks for each lane */}
+        {stackCards.map((stack, laneIndex) => {
+          const stackX = laneIndex * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
+          const STACK_OFFSET = 8; // How much each card pushes down
+          const stackTopY = 10; // Top padding in stack area
+
+          return (
+            <View key={laneIndex} style={[styles.stackContainer, { width: laneWidth }]}>
+              {stack.map(({ faceValue, stackIndex }) => {
+                // stackIndex 0 = most recently landed = at top
+                // Higher stackIndex = older = pushed down
+                const cardY = stackTopY + stackIndex * STACK_OFFSET;
+                const cardColor = NOTE_COLORS[laneIndex % NOTE_COLORS.length];
+
+                return (
+                  <View
+                    key={faceValue}
+                    style={[
+                      styles.deckCard,
+                      {
+                        backgroundColor: cardColor,
+                        left: stackX,
+                        top: cardY,
+                        zIndex: stack.length - stackIndex, // Newest on top
+                      },
+                    ]}
+                  >
+                    <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
       </View>
 
       {/* Time Remaining Display */}
@@ -898,21 +1143,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     zIndex: 100,
   },
-  stackPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#333',
-  },
-  stackPlaceholderText: {
-    color: '#666',
-    fontSize: 12,
+  stackContainer: {
+    position: 'relative',
+    height: '100%',
+    overflow: 'hidden', // Cards pushed beyond visible area are clipped
   },
   placeholderText: {
     color: '#666',
     fontSize: 18,
     fontWeight: '600',
+  },
+  deckCard: {
+    position: 'absolute',
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  goalDeckCard: {
+    backgroundColor: '#333',
+    opacity: 0.3,
+    borderColor: '#666',
+  },
+  deckCardNumber: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  fallingCard: {
+    position: 'absolute',
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
   },
   scrollView: {
     flex: 1,
