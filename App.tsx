@@ -244,6 +244,8 @@ type AutoScrollViewState = {
   setIsMomentumScrolling: (value: boolean) => void;
   awaitingMomentumScroll: boolean;
   setAwaitingMomentumScroll: (value: boolean) => void;
+  isPaused: boolean;
+  setIsPaused: (value: boolean) => void;
   isScrolling: boolean;
   inhibitAutoScroll: boolean;
 };
@@ -257,6 +259,7 @@ function useAutoScrollViewState(): AutoScrollViewState {
   const [isRegularScrolling, setIsRegularScrolling] = useState(false);
   const [isMomentumScrolling, setIsMomentumScrolling] = useState(false);
   const [awaitingMomentumScroll, setAwaitingMomentumScroll] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const isScrolling = isRegularScrolling || isMomentumScrolling;
   const inhibitAutoScroll = isTouching || isScrolling || awaitingMomentumScroll;
@@ -270,6 +273,8 @@ function useAutoScrollViewState(): AutoScrollViewState {
     setIsMomentumScrolling,
     awaitingMomentumScroll,
     setAwaitingMomentumScroll,
+    isPaused,
+    setIsPaused,
     isScrolling,
     inhibitAutoScroll,
   };
@@ -306,6 +311,7 @@ function AutoScrollView({
     setIsRegularScrolling,
     setIsMomentumScrolling,
     setAwaitingMomentumScroll,
+    isPaused,
     inhibitAutoScroll,
   } = state;
 
@@ -379,7 +385,7 @@ function AutoScrollView({
   scrollYRef.current = scrollY;
 
   useEffect(() => {
-    if (inhibitAutoScroll || scrollSpeed === 0) return;
+    if (inhibitAutoScroll || isPaused || scrollSpeed === 0) return;
 
     let animationFrameId: number;
     let lastTimestamp: number | null = null;
@@ -400,7 +406,7 @@ function AutoScrollView({
 
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [inhibitAutoScroll, scrollSpeed, onScrollYChange]);
+  }, [inhibitAutoScroll, isPaused, scrollSpeed, onScrollYChange]);
 
   return (
     <ScrollView
@@ -502,7 +508,7 @@ export default function App() {
 
   // Autoscroll state management
   const autoScrollState = useAutoScrollViewState();
-  const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, inhibitAutoScroll } = autoScrollState;
+  const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, isPaused, setIsPaused, inhibitAutoScroll } = autoScrollState;
 
   // Game settings - initialize with defaults, will load saved values in effect
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
@@ -536,7 +542,10 @@ export default function App() {
     setScrollY(scrollHelper.clampScrollY(scrollY));
   }, [scrollHelper.deps]);
 
-  const resetScrollY = () => setScrollY(initialScrollY);  // Direct reset, no clamping needed for 0
+  const resetScrollY = () => {
+    setScrollY(initialScrollY);
+    setIsPaused(false);
+  };
 
   const setPerm = (perm: number[]) => {
     setShuffleState({ permutation: perm, currentRound: 0 });
@@ -547,6 +556,7 @@ export default function App() {
       scrollHelper.windowHeight,
     );
     setScrollY(nextScrollHelper.initialScrollY);
+    setIsPaused(false);
   };
 
   // Setters that maintain invariants
@@ -771,6 +781,13 @@ export default function App() {
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Reverse</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => setIsPaused(!isPaused)}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>{isPaused ? 'Resume' : 'Pause'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
