@@ -288,25 +288,32 @@ export function calculateCardPosition(
 
   const pilePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, stackOffset);
 
-  // Set zIndex based on dealing order - later cards appear on top
-  const baseZIndex = positionInSequence;
+  // zIndex for source deck: earlier cards (lower index) on top
+  const sourceZIndex = totalCards - positionInSequence;
+  // zIndex for piles: later dealt cards on top within the pile
+  const pileZIndex = positionInSequence;
+  // zIndex during dealing animation: above source deck
+  const dealingZIndex = totalCards + positionInSequence;
 
   // Determine card state based on current time
   if (trackTime < cardDealStartTime) {
     // Card hasn't started dealing yet - stay in source position
-    return { ...sourcePos, zIndex: baseZIndex };
+    return { ...sourcePos, zIndex: sourceZIndex };
   } else if (trackTime < cardDealTime) {
     // Card is currently being dealt - interpolate
     const dealProgress = (trackTime - cardDealStartTime) / dealDuration;
-    return { ...interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true), zIndex: baseZIndex };
+    return { ...interpolatePosition(sourcePos, pilePos, Math.min(1, dealProgress), true), zIndex: dealingZIndex };
   } else if (trackTime < collectPhaseStart) {
     // Card has been dealt - stay in pile position
-    return { ...pilePos, zIndex: baseZIndex };
+    return { ...pilePos, zIndex: pileZIndex };
   } else {
     // Collect phase - animate piles to new deck sequentially
     const nextSequence = shuffle.seqs[currentRound + 1];
     const nextPositionInSequence = nextSequence.indexOf(faceValue);
     const finalPos = getSourcePosition(nextPositionInSequence, totalCards, containerWidth, containerHeight);
+
+    // zIndex for final position: based on next sequence (earlier on top)
+    const finalZIndex = totalCards - nextPositionInSequence;
 
     // Collect piles sequentially: pile 0 first, then pile 1, etc.
     const totalCollectTime = collectPhaseEnd - collectPhaseStart;
@@ -316,17 +323,18 @@ export function calculateCardPosition(
 
     if (trackTime < pileCollectStart) {
       // This pile hasn't started collecting yet
-      return { ...pilePos, zIndex: baseZIndex };
+      return { ...pilePos, zIndex: pileZIndex };
     } else if (trackTime < pileCollectEnd) {
       // This pile is currently being collected
       const pileProgress = (trackTime - pileCollectStart) / timePerPile;
+      // During collection animation, use finalZIndex so cards layer correctly as they merge
       return {
         ...interpolatePosition(pilePos, finalPos, Math.min(1, pileProgress), false),
-        zIndex: baseZIndex
+        zIndex: finalZIndex
       };
     } else {
       // This pile has finished collecting
-      return { ...finalPos, zIndex: baseZIndex };
+      return { ...finalPos, zIndex: finalZIndex };
     }
   }
 }
