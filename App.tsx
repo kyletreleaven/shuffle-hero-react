@@ -7,7 +7,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
 import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
 import { calculateDeckXPositions } from './utils/AnimationHelper';
-import { AnimatedCard } from './components/AnimatedCard';
 
 const LANE_COUNT = 5;
 const NOTE_COUNT = 40; // Number of cards
@@ -961,16 +960,23 @@ export default function App() {
       {/* Bottom stack row - visual background only */}
       <View style={styles.bottomStackRow} />
 
-      {/* Unified card overlay - all cards rendered here with AnimatedCard */}
+      {/* Unified card overlay - all cards rendered with direct positioning */}
       <View style={styles.cardOverlay} pointerEvents="none">
         {cardScreenPositions.map(({ faceValue, x, y, zIndex, color }) => (
-          <AnimatedCard
+          <View
             key={faceValue}
-            cardNumber={faceValue}
-            displayValue={faceValue}
-            position={{ x, y, zIndex }}
-            color={color}
-          />
+            style={[
+              styles.deckCard,
+              {
+                backgroundColor: color,
+                left: x,
+                top: y,
+                zIndex,
+              },
+            ]}
+          >
+            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+          </View>
         ))}
       </View>
 
