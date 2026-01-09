@@ -808,7 +808,7 @@ export default function App() {
                   styles.ghostNote,
                   {
                     borderColor: note.color,
-                    left: note.lane * laneWidth + laneWidth / 2 - 30,
+                    left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
                     top: note.position,
                   },
                 ]}
@@ -821,9 +821,9 @@ export default function App() {
             {cardStates
               .filter(card => card.state === 'falling')
               .map(card => {
-                // Card position follows its ghost note position
+                // Card position follows its ghost note position exactly
                 const cardX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
-                const cardY = scrollHelper.cardY(card.seqIndex) - CARD_HEIGHT / 2 + 30; // Offset to center on ghost note
+                const cardY = scrollHelper.cardY(card.seqIndex); // Same as ghost note top
                 const cardColor = NOTE_COLORS[card.lane % NOTE_COLORS.length];
 
                 return (
@@ -1257,9 +1257,9 @@ const styles = StyleSheet.create({
   },
   ghostNote: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    borderRadius: 6,
     borderWidth: 2,
     borderStyle: 'dashed',
     backgroundColor: 'transparent',
