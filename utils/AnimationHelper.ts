@@ -24,23 +24,82 @@ export type RemainingDeckCardCenterXFn = (
 ) => number;
 
 /**
- * Decreasing-spacing implementation: first cards slightly spread, later cards stack tightly.
- * Uses logarithmic spacing so visible cards fan out but the bulk of the deck stacks.
- * Deck is right-aligned at ~75% of screen width (so dealt cards go left).
+ * Spacing function with gradual decrease and optional knee for fitting.
+ * - Starts with small constant spacing (can be negative for overlap)
+ * - Decreases gradually at first
+ * - After a knee point, decreases more sharply if needed to fit target width
+ * - Centers deck if it's smaller than target area
  */
 export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, screenWidth, cardWidth, remainingCards) => {
-  if (remainingCards <= 1) return screenWidth * 0.75;
+  if (remainingCards <= 1) return screenWidth / 2;
 
-  // Use log curve: position = log(i + 1) / log(n + 1)
-  // This spreads the first few cards and stacks the rest
-  const t = Math.log(i + 1) / Math.log(remainingCards + 1); // 0 to ~1
+  // Tunable parameters
+  const initialSpacing = -2; // Starting spacing (negative = slight overlap)
+  const gradualRate = 0.3; // How fast spacing decreases per card (before knee)
+  const minSpacing = -cardWidth * 0.9; // Maximum overlap allowed
+  const targetWidthFraction = 0.7; // Target deck width as fraction of screen
+  const kneeRatio = 0.25; // Knee at 25% through the deck
 
-  // Deck spans about 50% of screen width, right-aligned at 75%
-  const deckWidth = screenWidth * 0.5;
-  const deckRightEdge = screenWidth * 0.75 + cardWidth / 2;
-  const deckLeftEdge = deckRightEdge - deckWidth;
+  const targetWidth = screenWidth * targetWidthFraction;
+  const knee = Math.max(1, Math.floor(remainingCards * kneeRatio));
 
-  return deckLeftEdge + t * deckWidth;
+  // Compute spacings with given steep rate after knee
+  const computeSpacings = (steepRate: number): number[] => {
+    const spacings: number[] = [];
+    const spacingAtKnee = initialSpacing - gradualRate * knee;
+
+    for (let j = 0; j < remainingCards - 1; j++) {
+      let spacing: number;
+      if (j < knee) {
+        spacing = initialSpacing - gradualRate * j;
+      } else {
+        spacing = spacingAtKnee - steepRate * (j - knee);
+      }
+      spacings.push(Math.max(minSpacing, spacing));
+    }
+    return spacings;
+  };
+
+  // Compute total width from spacings
+  const computeWidth = (spacings: number[]): number => {
+    return remainingCards * cardWidth + spacings.reduce((a, b) => a + b, 0);
+  };
+
+  // Start with steep rate = gradual rate (smooth curve, no sharp knee)
+  let steepRate = gradualRate;
+  let spacings = computeSpacings(steepRate);
+  let totalWidth = computeWidth(spacings);
+
+  // If too wide, binary search for steep rate that fits
+  if (totalWidth > targetWidth) {
+    let lo = gradualRate;
+    let hi = 100;
+    for (let iter = 0; iter < 20; iter++) {
+      const mid = (lo + hi) / 2;
+      spacings = computeSpacings(mid);
+      totalWidth = computeWidth(spacings);
+      if (totalWidth > targetWidth) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    spacings = computeSpacings(lo);
+    totalWidth = computeWidth(spacings);
+  }
+
+  // Compute positions from spacings
+  const positions: number[] = [0];
+  for (let j = 0; j < spacings.length; j++) {
+    positions.push(positions[j] + cardWidth + spacings[j]);
+  }
+
+  // Center the deck (works whether deck is smaller or at target width)
+  const actualWidth = positions[remainingCards - 1] + cardWidth;
+  const startX = (screenWidth - actualWidth) / 2;
+
+  // Return center of card i
+  return startX + positions[i] + cardWidth / 2;
 };
 
 /**
