@@ -24,10 +24,9 @@ export type RemainingDeckCardCenterXFn = (
 ) => number;
 
 /**
- * Spacing function with gradual decrease and scaling to fit.
- * - Starts with small constant spacing (can be negative for overlap)
- * - Decreases gradually at first, sharper after knee
- * - Scales all spacings toward minSpacing if needed to fit target width
+ * Spacing function with fixed initial spacing and compression for later cards.
+ * - Pre-knee area (60% of target width): cards at fixed gradual spacing
+ * - Post-knee area (40% of target width): remaining cards compressed to fit
  * - Centers deck if it's smaller than target area
  */
 export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, screenWidth, cardWidth, remainingCards) => {
@@ -36,73 +35,50 @@ export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, s
   // Tunable parameters
   const initialSpacing = -2; // Starting spacing (negative = slight overlap)
   const gradualRate = 0.3; // How fast spacing decreases per card (before knee)
-  const kneeRate = 1.5; // How fast spacing decreases after knee
   const minSpacing = -cardWidth * 0.9; // Maximum overlap allowed
   const targetWidthFraction = 0.7; // Target deck width as fraction of screen
-  const kneeCount = 10; // Fixed number of cards before knee kicks in
+  const kneePositionFraction = 0.6; // Knee at 60% of target width
 
   const targetWidth = screenWidth * targetWidthFraction;
-  const knee = Math.min(kneeCount, Math.floor(remainingCards * 0.25));
+  const kneePosition = targetWidth * kneePositionFraction; // x-position of knee
+  const postKneeWidth = targetWidth - kneePosition; // Width available after knee
 
-  // Compute "ideal" spacings (before any scaling to fit)
-  const computeIdealSpacings = (): number[] => {
-    const spacings: number[] = [];
-    const spacingAtKnee = initialSpacing - gradualRate * knee;
+  // Fill pre-knee area with cards at fixed spacing until we hit the knee or run out of cards
+  const preKneeSpacings: number[] = [];
+  let preKneeUsedWidth = cardWidth; // First card
+  let preKneeCardCount = 1;
 
-    for (let j = 0; j < remainingCards - 1; j++) {
-      let spacing: number;
-      if (j < knee) {
-        spacing = initialSpacing - gradualRate * j;
-      } else {
-        spacing = spacingAtKnee - kneeRate * (j - knee);
-      }
-      spacings.push(Math.max(minSpacing, spacing));
+  for (let j = 0; j < remainingCards - 1; j++) {
+    const spacing = initialSpacing - gradualRate * j;
+    const nextCardWidth = cardWidth + spacing;
+
+    if (preKneeUsedWidth + nextCardWidth > kneePosition) {
+      // Next card would exceed knee position, stop here
+      break;
     }
-    return spacings;
-  };
 
-  // Compute total width from spacings
-  const computeWidth = (spacings: number[]): number => {
-    return remainingCards * cardWidth + spacings.reduce((a, b) => a + b, 0);
-  };
+    preKneeSpacings.push(spacing);
+    preKneeUsedWidth += nextCardWidth;
+    preKneeCardCount++;
+  }
 
-  // Scale spacings toward minSpacing by factor t (0 = ideal, 1 = all at min)
-  const scaleSpacings = (ideal: number[], t: number): number[] => {
-    return ideal.map(s => s + (minSpacing - s) * t);
-  };
+  // Remaining cards go in post-knee area
+  const postKneeCards = remainingCards - preKneeCardCount;
+  const postKneeGaps = postKneeCards; // Gap from last pre-knee card to first post-knee, plus gaps between post-knee cards
 
-  const idealSpacings = computeIdealSpacings();
-  let spacings = idealSpacings;
-  let totalWidth = computeWidth(spacings);
+  // Calculate post-knee spacings to fit in post-knee width
+  const postKneeSpacings: number[] = [];
+  if (postKneeCards > 0) {
+    const availableForSpacing = postKneeWidth - postKneeCards * cardWidth;
+    const spacingPerGap = Math.max(minSpacing, availableForSpacing / postKneeGaps);
 
-  // If too wide, binary search for scale factor that fits
-  if (totalWidth > targetWidth) {
-    // Check if even max compression fits
-    const minWidth = computeWidth(scaleSpacings(idealSpacings, 1));
-
-    if (minWidth <= targetWidth) {
-      // Binary search for the right scale factor
-      let lo = 0;
-      let hi = 1;
-      for (let iter = 0; iter < 20; iter++) {
-        const mid = (lo + hi) / 2;
-        spacings = scaleSpacings(idealSpacings, mid);
-        totalWidth = computeWidth(spacings);
-        if (totalWidth > targetWidth) {
-          lo = mid; // Still too wide, need more compression
-        } else {
-          hi = mid; // Fits, try less compression
-        }
-      }
-      // Use hi - it's the scale factor that fits
-      spacings = scaleSpacings(idealSpacings, hi);
-      totalWidth = computeWidth(spacings);
-    } else {
-      // Even max compression doesn't fit, use max compression
-      spacings = scaleSpacings(idealSpacings, 1);
-      totalWidth = minWidth;
+    for (let j = 0; j < postKneeGaps; j++) {
+      postKneeSpacings.push(spacingPerGap);
     }
   }
+
+  // Combine all spacings
+  const spacings = [...preKneeSpacings, ...postKneeSpacings];
 
   // Compute positions from spacings
   const positions: number[] = [0];
@@ -110,7 +86,7 @@ export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, s
     positions.push(positions[j] + cardWidth + spacings[j]);
   }
 
-  // Center the deck (works whether deck is smaller or at target width)
+  // Center the deck
   const actualWidth = positions[remainingCards - 1] + cardWidth;
   const startX = (screenWidth - actualWidth) / 2;
 
