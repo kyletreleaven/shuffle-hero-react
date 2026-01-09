@@ -746,6 +746,18 @@ export default function App() {
 
   // Calculate which cards are in which state
   const cardStates = useMemo(() => {
+    // Handle edge case: no rounds needed (e.g., 1 card already in position)
+    if (numberOfRounds === 0 || currentRound >= numberOfRounds) {
+      // All cards are already "collected" in final position
+      const sequence = shuffle.seqs[0] || [];
+      return sequence.map((faceValue, seqIndex) => ({
+        faceValue,
+        seqIndex,
+        lane: 0,
+        state: 'collected' as const,
+      }));
+    }
+
     const sequence = shuffle.seqs[currentRound];
     const states: Array<{
       faceValue: number;
@@ -815,7 +827,7 @@ export default function App() {
     }
 
     return states;
-  }, [shuffle, currentRound, trackTime, numberOfCards, numberOfLanes, getCardEnterTime, getCardExitTime, scrollHelper]);
+  }, [shuffle, currentRound, trackTime, numberOfCards, numberOfLanes, numberOfRounds, getCardEnterTime, getCardExitTime, scrollHelper]);
 
   // Count cards per stack for positioning
   const stackCounts = useMemo(() => {
