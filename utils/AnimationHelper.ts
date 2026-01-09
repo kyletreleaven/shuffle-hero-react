@@ -8,6 +8,56 @@ export type CardPosition = {
   zIndex?: number;
 };
 
+/**
+ * Function type for calculating a card's centerline x position.
+ * @param i - Index of the card (0-based, 0 is leftmost)
+ * @param screenWidth - Width of the container
+ * @param cardWidth - Width of each card
+ * @param numCards - Total number of cards in the deck
+ * @returns The x-coordinate of the card's vertical centerline
+ */
+export type CardCenterXFn = (
+  i: number,
+  screenWidth: number,
+  cardWidth: number,
+  numCards: number
+) => number;
+
+/**
+ * Default implementation: evenly spaced, centered on screen.
+ * TODO: Replace with decreasing-spacing function
+ */
+export const defaultCardCenterX: CardCenterXFn = (i, screenWidth, cardWidth, numCards) => {
+  if (numCards <= 1) return screenWidth / 2;
+
+  const spacing = cardWidth * 0.1; // 10% of card width between cards
+  const totalWidth = numCards * cardWidth + (numCards - 1) * spacing;
+  const startX = (screenWidth - totalWidth) / 2 + cardWidth / 2;
+
+  return startX + i * (cardWidth + spacing);
+};
+
+/**
+ * Calculate x-positions for cards in a deck.
+ * Returns array of left-edge x-positions for each card.
+ */
+export function calculateDeckXPositions(
+  totalCards: number,
+  containerWidth: number,
+  cardWidth: number = 40,
+  centerXFn: CardCenterXFn = defaultCardCenterX
+): number[] {
+  if (totalCards === 0) return [];
+
+  const positions: number[] = [];
+  for (let i = 0; i < totalCards; i++) {
+    const centerX = centerXFn(i, containerWidth, cardWidth, totalCards);
+    positions.push(centerX - cardWidth / 2); // Convert centerline to left edge
+  }
+
+  return positions;
+}
+
 export type AnimationPhase = 'deal' | 'stack' | 'collect';
 
 export type AnimationState = {
@@ -77,34 +127,14 @@ export function getSourcePosition(
   const padding = 20;
   const cardWidth = 40;
   const cardHeight = 60;
-  const cardSpacing = 2;
   const goalDeckOffset = 80; // Space reserved for goal deck below
 
-  // Calculate how many cards fit in one row
-  const availableWidth = containerWidth - 2 * padding;
-  const cardsPerRow = Math.floor(availableWidth / (cardWidth + cardSpacing));
-
-  // If cards don't fit in one row, arrange in multiple rows
-  if (totalCards > cardsPerRow) {
-    const row = Math.floor(cardIndex / cardsPerRow);
-    const col = cardIndex % cardsPerRow;
-    const rowWidth = cardsPerRow * (cardWidth + cardSpacing);
-    const startX = (containerWidth - rowWidth) / 2;
-
-    return {
-      x: startX + col * (cardWidth + cardSpacing),
-      y: containerHeight - padding - cardHeight - goalDeckOffset - row * (cardHeight + 10), // Stack rows upward, with space for goal deck
-      rotation: 0,
-      scale: 1,
-    };
-  }
-
-  // Single row - center the cards horizontally
-  const totalWidth = totalCards * (cardWidth + cardSpacing) - cardSpacing; // Don't count spacing after last card
-  const startX = (containerWidth - totalWidth) / 2;
+  // Use the deck layout helper for x-positions with decreasing spacing
+  const xPositions = calculateDeckXPositions(totalCards, containerWidth, cardWidth);
+  const x = xPositions[cardIndex] ?? containerWidth / 2 - cardWidth / 2;
 
   return {
-    x: startX + cardIndex * (cardWidth + cardSpacing),
+    x,
     y: containerHeight - padding - cardHeight - goalDeckOffset,
     rotation: 0,
     scale: 1,
