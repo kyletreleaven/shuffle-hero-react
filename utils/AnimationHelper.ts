@@ -236,43 +236,49 @@ export function calculateCardPosition(
   // The beat line is at the vertical middle of the actual visible track panel
   // In split mode, this is 60% of window height, otherwise full window height
   const actualTrackHeight = trackPanelHeight || scrollHelper.windowHeight;
-  const cardYPosition = scrollHelper.cardY(positionInSequence);
-  const beatLineOffset = actualTrackHeight / 2;
-  const scrollYAtBeatLine = cardYPosition - beatLineOffset;
-  const cardBeatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
 
-  // Time offset from start of round 0 (same pattern repeats in all rounds)
-  const timeFromRoundStart = cardBeatLineTime - scrollHelper.minTime;
+  // Helper to get deal start time for any position
+  const getDealStartTime = (pos: number) => {
+    const yPos = scrollHelper.cardY(pos);
+    const beatLineOffset = actualTrackHeight / 2;
+    const scrollYAtBeatLine = yPos - beatLineOffset;
+    const beatLineTime = scrollHelper.trackTime(scrollYAtBeatLine);
+    const timeFromRoundStart = beatLineTime - scrollHelper.minTime;
+    const dealTime = scrollHelper.minTime + timeFromRoundStart;
+    const dealDuration = scrollHelper.timePerRound / (totalCards * 2);
+    return dealTime - dealDuration;
+  };
 
-  // For each round, trackTime ranges from minTime to maxTime
-  // So we just use the offset within the round, not absolute time across rounds
-  const cardDealTime = scrollHelper.minTime + timeFromRoundStart;
-
-  // Duration for a single card's deal animation
-  const dealDuration = scrollHelper.timePerRound / (totalCards * 2); // Each card animates for half the time to next card
-  const cardDealStartTime = cardDealTime - dealDuration;
+  const cardDealStartTime = getDealStartTime(positionInSequence);
+  const dealDuration = scrollHelper.timePerRound / (totalCards * 2);
+  const cardDealTime = cardDealStartTime + dealDuration;
 
   // Calculate when the last card finishes dealing
-  const lastCardPosition = totalCards - 1;
-  const lastCardYPosition = scrollHelper.cardY(lastCardPosition);
-  const lastCardScrollYAtBeatLine = lastCardYPosition - beatLineOffset;
-  const lastCardBeatLineTime = scrollHelper.trackTime(lastCardScrollYAtBeatLine);
-  const lastCardTimeFromRoundStart = lastCardBeatLineTime - scrollHelper.minTime;
-  const lastCardDealTime = scrollHelper.minTime + lastCardTimeFromRoundStart;
+  const lastCardDealTime = getDealStartTime(totalCards - 1) + dealDuration;
 
   // Add a small delay before collection starts so piles are visible
   const pauseBeforeCollect = 0.5; // seconds
   const collectPhaseStart = Math.min(lastCardDealTime + pauseBeforeCollect, scrollHelper.maxTime - 0.5);
   const collectPhaseEnd = scrollHelper.maxTime;
 
-  // Check if there's enough time for collection animation
-  const collectPhaseDuration = collectPhaseEnd - collectPhaseStart;
-  const minCollectDuration = 0.5; // Need at least 0.5 seconds for smooth collection
+  // Count how many cards have left the source deck (started dealing)
+  let cardsDealt = 0;
+  for (let i = 0; i < totalCards; i++) {
+    if (trackTime >= getDealStartTime(i)) {
+      cardsDealt = i + 1;
+    } else {
+      break; // Deal times are sequential, so we can stop early
+    }
+  }
 
-  // If not enough time, collection will be faster (or we could extend padding)
+  // Calculate source position based on remaining deck
+  const remainingCards = totalCards - cardsDealt;
+  const indexInRemaining = positionInSequence - cardsDealt;
 
-  // Get source and target positions
-  const sourcePos = getSourcePosition(positionInSequence, totalCards, containerWidth, containerHeight);
+  // Get source position - use remaining deck count for cards still in deck
+  const sourcePos = trackTime < cardDealStartTime && remainingCards > 0 && indexInRemaining >= 0
+    ? getSourcePosition(indexInRemaining, remainingCards, containerWidth, containerHeight)
+    : getSourcePosition(positionInSequence, totalCards, containerWidth, containerHeight);
 
   // Which pile does this card go to?
   const pileIndex = shuffle.rounds[currentRound][faceValue];
@@ -288,8 +294,8 @@ export function calculateCardPosition(
 
   const pilePos = getPilePosition(pileIndex, cardIndexInPile, numberOfPiles, containerWidth, containerHeight, stackOffset);
 
-  // zIndex for source deck: earlier cards (lower index) on top
-  const sourceZIndex = totalCards - positionInSequence;
+  // zIndex for source deck: earlier cards (lower index) on top, based on remaining deck
+  const sourceZIndex = remainingCards - indexInRemaining;
   // zIndex for piles: later dealt cards on top within the pile
   const pileZIndex = positionInSequence;
   // zIndex during dealing animation: above source deck
