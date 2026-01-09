@@ -565,7 +565,7 @@ export default function App() {
 
     const seqs = [ShuffleUtil.invertPerm(permutation)];
 
-    for (let r = 1; r < nRounds; r++) {
+    for (let r = 1; r <= nRounds; r++) {
       const piles = ShuffleUtil.createPiles(numberOfLanes);
       ShuffleUtil.dealStacks(seqs[r - 1], rounds[r - 1], piles);
       seqs.push(ShuffleUtil.collectPiles(piles));

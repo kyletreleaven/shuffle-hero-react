@@ -186,6 +186,7 @@ export function calculateCardPosition(
   const totalCards = sequence.length;
 
   // Find this card's position in the dealing sequence
+  // TODO: Not very efficient..
   const positionInSequence = sequence.indexOf(faceValue);
 
   if (positionInSequence === -1) {
@@ -267,7 +268,7 @@ export function calculateCardPosition(
     return { ...pilePos, zIndex: baseZIndex };
   } else {
     // Collect phase - animate piles to new deck sequentially
-    const nextSequence = shuffle.seqs[currentRound + 1] || sequence;
+    const nextSequence = shuffle.seqs[currentRound + 1];
     const nextPositionInSequence = nextSequence.indexOf(faceValue);
     const finalPos = getSourcePosition(nextPositionInSequence, totalCards, containerWidth, containerHeight);
 
