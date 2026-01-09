@@ -1057,7 +1057,7 @@ export default function App() {
               },
             ]}
           >
-            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+            <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>
           </View>
         ))}
         {/* Goal deck (dimmed, in row above source deck) - shows target permutation */}
