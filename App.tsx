@@ -987,9 +987,10 @@ export default function App() {
           return (
             <View key={laneIndex} style={[styles.stackContainer, { width: laneWidth }]}>
               {stack.map(({ faceValue, stackIndex }) => {
-                // stackIndex 0 = most recently landed = at top
-                // Higher stackIndex = older = pushed down
-                const cardY = stackTopY + stackIndex * STACK_OFFSET;
+                // stackIndex 0 = first dealt (oldest), higher = newer
+                // Newest card (highest stackIndex) stays at top, older cards pushed down
+                const positionFromTop = stack.length - 1 - stackIndex;
+                const cardY = stackTopY + positionFromTop * STACK_OFFSET;
                 const cardColor = NOTE_COLORS[laneIndex % NOTE_COLORS.length];
 
                 return (
@@ -1001,7 +1002,7 @@ export default function App() {
                         backgroundColor: cardColor,
                         left: cardXInContainer,
                         top: cardY,
-                        zIndex: stack.length - stackIndex, // Newest on top
+                        zIndex: stackIndex, // Higher stackIndex = newer = on top
                       },
                     ]}
                   >
