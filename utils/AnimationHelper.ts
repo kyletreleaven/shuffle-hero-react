@@ -24,10 +24,10 @@ export type RemainingDeckCardCenterXFn = (
 ) => number;
 
 /**
- * Spacing function with gradual decrease and optional knee for fitting.
+ * Spacing function with gradual decrease and scaling to fit.
  * - Starts with small constant spacing (can be negative for overlap)
- * - Decreases gradually at first
- * - After a knee point, decreases more sharply if needed to fit target width
+ * - Decreases gradually at first, sharper after knee
+ * - Scales all spacings toward minSpacing if needed to fit target width
  * - Centers deck if it's smaller than target area
  */
 export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, screenWidth, cardWidth, remainingCards) => {
@@ -36,15 +36,16 @@ export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, s
   // Tunable parameters
   const initialSpacing = -2; // Starting spacing (negative = slight overlap)
   const gradualRate = 0.3; // How fast spacing decreases per card (before knee)
+  const kneeRate = 1.5; // How fast spacing decreases after knee
   const minSpacing = -cardWidth * 0.9; // Maximum overlap allowed
   const targetWidthFraction = 0.7; // Target deck width as fraction of screen
-  const kneeRatio = 0.25; // Knee at 25% through the deck
+  const kneeCount = 10; // Fixed number of cards before knee kicks in
 
   const targetWidth = screenWidth * targetWidthFraction;
-  const knee = Math.max(1, Math.floor(remainingCards * kneeRatio));
+  const knee = Math.min(kneeCount, Math.floor(remainingCards * 0.25));
 
-  // Compute spacings with given steep rate after knee
-  const computeSpacings = (steepRate: number): number[] => {
+  // Compute "ideal" spacings (before any scaling to fit)
+  const computeIdealSpacings = (): number[] => {
     const spacings: number[] = [];
     const spacingAtKnee = initialSpacing - gradualRate * knee;
 
@@ -53,7 +54,7 @@ export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, s
       if (j < knee) {
         spacing = initialSpacing - gradualRate * j;
       } else {
-        spacing = spacingAtKnee - steepRate * (j - knee);
+        spacing = spacingAtKnee - kneeRate * (j - knee);
       }
       spacings.push(Math.max(minSpacing, spacing));
     }
@@ -65,27 +66,42 @@ export const defaultRemainingDeckCardCenterX: RemainingDeckCardCenterXFn = (i, s
     return remainingCards * cardWidth + spacings.reduce((a, b) => a + b, 0);
   };
 
-  // Start with steep rate = gradual rate (smooth curve, no sharp knee)
-  let steepRate = gradualRate;
-  let spacings = computeSpacings(steepRate);
+  // Scale spacings toward minSpacing by factor t (0 = ideal, 1 = all at min)
+  const scaleSpacings = (ideal: number[], t: number): number[] => {
+    return ideal.map(s => s + (minSpacing - s) * t);
+  };
+
+  const idealSpacings = computeIdealSpacings();
+  let spacings = idealSpacings;
   let totalWidth = computeWidth(spacings);
 
-  // If too wide, binary search for steep rate that fits
+  // If too wide, binary search for scale factor that fits
   if (totalWidth > targetWidth) {
-    let lo = gradualRate;
-    let hi = 100;
-    for (let iter = 0; iter < 20; iter++) {
-      const mid = (lo + hi) / 2;
-      spacings = computeSpacings(mid);
-      totalWidth = computeWidth(spacings);
-      if (totalWidth > targetWidth) {
-        lo = mid;
-      } else {
-        hi = mid;
+    // Check if even max compression fits
+    const minWidth = computeWidth(scaleSpacings(idealSpacings, 1));
+
+    if (minWidth <= targetWidth) {
+      // Binary search for the right scale factor
+      let lo = 0;
+      let hi = 1;
+      for (let iter = 0; iter < 20; iter++) {
+        const mid = (lo + hi) / 2;
+        spacings = scaleSpacings(idealSpacings, mid);
+        totalWidth = computeWidth(spacings);
+        if (totalWidth > targetWidth) {
+          lo = mid; // Still too wide, need more compression
+        } else {
+          hi = mid; // Fits, try less compression
+        }
       }
+      // Use hi - it's the scale factor that fits
+      spacings = scaleSpacings(idealSpacings, hi);
+      totalWidth = computeWidth(spacings);
+    } else {
+      // Even max compression doesn't fit, use max compression
+      spacings = scaleSpacings(idealSpacings, 1);
+      totalWidth = minWidth;
     }
-    spacings = computeSpacings(lo);
-    totalWidth = computeWidth(spacings);
   }
 
   // Compute positions from spacings
