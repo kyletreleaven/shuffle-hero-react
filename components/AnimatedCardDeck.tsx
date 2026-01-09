@@ -90,7 +90,7 @@ export function AnimatedCardDeck({
         position: {
           x: xPositions[i] ?? windowDimensions.width / 2 - cardWidth / 2,
           y: goalY,
-          zIndex: -1,
+          zIndex: -1 - i, // Earlier cards (lower i) on top, all behind main deck
         },
         color: '#333', // Darker color for goal deck
       });
