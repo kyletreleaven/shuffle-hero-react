@@ -831,10 +831,33 @@ export default function App() {
         }
 
         case 'falling': {
-          // Convert track content Y to screen Y
+          // Note position (where card should end up)
+          const noteX = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
           const contentY = scrollHelper.cardY(card.seqIndex);
-          y = contentY - scrollY + TOP_DECK_HEIGHT;
-          x = card.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2;
+          const noteY = contentY - scrollY + TOP_DECK_HEIGHT;
+
+          // Deal animation: quick transition from deck to note position
+          const dealAnimationFraction = 0.15; // 15% of fall time for deal animation
+          const dealProgress = card.dealProgress ?? 0;
+
+          if (dealProgress < dealAnimationFraction) {
+            // Animating from deck to note
+            const t = dealProgress / dealAnimationFraction;
+            const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+
+            // Deck position (where card was before dealing)
+            // Use the position it would have had in a full deck at top
+            const deckCardX = fullDeckPositions[card.seqIndex] ?? windowDimensions.width / 2 - CARD_WIDTH / 2;
+            const deckCardY = deckY;
+
+            x = deckCardX + (noteX - deckCardX) * eased;
+            y = deckCardY + (noteY - deckCardY) * eased;
+          } else {
+            // Glued to note position
+            x = noteX;
+            y = noteY;
+          }
+
           zIndex = 1000 + card.seqIndex;
           break;
         }
