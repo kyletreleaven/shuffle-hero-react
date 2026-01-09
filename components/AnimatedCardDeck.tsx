@@ -111,14 +111,14 @@ export function AnimatedCardDeck({
 
       positions.push({
         cardNumber: i,
-        displayValue: i, // Goal is cards in order: 1, 2, 3, ...
+        displayValue: permutation[i], // Show permutation[i] for goal deck too
         position: { ...sourcePos, zIndex: -1 },
         color: '#333', // Darker color for goal deck
       });
     }
 
     return positions;
-  }, [numberOfCards, windowDimensions.width, windowDimensions.height]);
+  }, [numberOfCards, windowDimensions.width, windowDimensions.height, permutation]);
 
   return (
     <View style={styles.container}>
