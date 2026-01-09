@@ -15,10 +15,12 @@ const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
 
 // Unified track view layout constants
-const TOP_DECK_HEIGHT = 100;     // Height for source/goal deck row at top
+const TOP_DECK_HEIGHT_SINGLE = 80;   // Height for source deck only
+const TOP_DECK_HEIGHT_DOUBLE = 150;  // Height for goal deck + source deck rows
 const BOTTOM_STACK_HEIGHT = 100; // Height for landing stacks at bottom
 const CARD_WIDTH = 40;
 const CARD_HEIGHT = 60;
+const DECK_ROW_PADDING = 8;      // Padding between deck rows
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -518,6 +520,10 @@ export default function App() {
   // Game settings - initialize with defaults, will load saved values in effect
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
+  const [showGoalDeck, setShowGoalDeck] = useState(false);
+
+  // Dynamic top deck height based on whether goal deck is shown
+  const topDeckHeight = showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE;
 
   type ShuffleState = {
     permutation: number[];
@@ -629,6 +635,7 @@ export default function App() {
           const prefs = JSON.parse(saved);
           if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
+          if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
           }
@@ -649,6 +656,7 @@ export default function App() {
           numberOfCards,
           numberOfLanes,
           scrollSpeed,
+          showGoalDeck,
         };
         const prefsString = JSON.stringify(prefs);
 
@@ -663,7 +671,7 @@ export default function App() {
     };
 
     savePreferences();
-  }, [numberOfCards, numberOfLanes, scrollSpeed]);
+  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck]);
 
   const handleScrollYChange = setScrollY;
 
@@ -676,9 +684,11 @@ export default function App() {
   );
 
   // Measured positions from placeholder elements
-  const [deckRowY, setDeckRowY] = useState(TOP_DECK_HEIGHT / 2 - CARD_HEIGHT / 2);
+  // Goal deck is in the top row (if shown), source/deal deck is below it
+  const [goalDeckY, setGoalDeckY] = useState(DECK_ROW_PADDING);
+  const [deckRowY, setDeckRowY] = useState(showGoalDeck ? DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING : (TOP_DECK_HEIGHT_SINGLE - CARD_HEIGHT) / 2);
   const [stackRowY, setStackRowY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
-  const [trackTopY, setTrackTopY] = useState(TOP_DECK_HEIGHT);
+  const [trackTopY, setTrackTopY] = useState(topDeckHeight);
   const [trackBottomY, setTrackBottomY] = useState(windowDimensions.height - BOTTOM_STACK_HEIGHT - 70);
 
   // Reference to measure scroll content origin position
@@ -1004,33 +1014,22 @@ export default function App() {
         </AutoScrollView>
       </View>
 
-      {/* Top deck row - fixed position overlay (goal deck only) */}
+      {/* Top deck row - fixed position overlay (background only, decks rendered in cardOverlay) */}
       <View
-        style={styles.topDeckRow}
+        style={[styles.topDeckRow, { height: topDeckHeight }]}
         onLayout={(e) => {
           const { y, height } = e.nativeEvent.layout;
-          setDeckRowY(y + (height - CARD_HEIGHT) / 2);
+          if (showGoalDeck) {
+            // Goal deck at top, source deck below it
+            setGoalDeckY(y + DECK_ROW_PADDING);
+            setDeckRowY(y + DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING);
+          } else {
+            // Only source deck, centered vertically
+            setDeckRowY(y + (height - CARD_HEIGHT) / 2);
+          }
           setTrackTopY(y + height);
         }}
-      >
-        {/* Goal deck (dimmed, behind) - shows target permutation */}
-        {permutation.map((faceValue, displayIndex) => (
-          <View
-            key={`goal-${displayIndex}`}
-            style={[
-              styles.deckCard,
-              styles.goalDeckCard,
-              {
-                left: deckXPositions[displayIndex],
-                top: (TOP_DECK_HEIGHT - CARD_HEIGHT) / 2,
-                zIndex: -1 - displayIndex,
-              },
-            ]}
-          >
-            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
-          </View>
-        ))}
-      </View>
+      />
 
       {/* Bottom stack row - visual background only */}
       <View
@@ -1044,6 +1043,7 @@ export default function App() {
 
       {/* Unified card overlay - all cards rendered with direct positioning */}
       <View style={styles.cardOverlay} pointerEvents="none">
+        {/* Source/dealing cards */}
         {cardScreenPositions.map(({ faceValue, x, y, zIndex, color }) => (
           <View
             key={faceValue}
@@ -1054,6 +1054,23 @@ export default function App() {
                 left: x,
                 top: y,
                 zIndex,
+              },
+            ]}
+          >
+            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+          </View>
+        ))}
+        {/* Goal deck (dimmed, in row above source deck) - shows target permutation */}
+        {showGoalDeck && permutation.map((faceValue, displayIndex) => (
+          <View
+            key={`goal-${displayIndex}`}
+            style={[
+              styles.deckCard,
+              styles.goalDeckCard,
+              {
+                left: deckXPositions[displayIndex],
+                top: goalDeckY,
+                zIndex: 2000 + displayIndex,
               },
             ]}
           >
@@ -1102,6 +1119,12 @@ export default function App() {
             onPress={() => setMenuVisible(true)}
           >
             <Text style={styles.buttonText}>Menu</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, showGoalDeck && styles.bottomButtonActive]}
+            onPress={() => setShowGoalDeck(!showGoalDeck)}
+          >
+            <Text style={styles.buttonText}>Goal</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
@@ -1203,13 +1226,31 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: TOP_DECK_HEIGHT,
+    // height is set dynamically based on showGoalDeck
     backgroundColor: 'rgba(10, 10, 10, 0.9)',
     borderBottomWidth: 2,
     borderBottomColor: '#333',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
+  },
+  toggleButton: {
+    backgroundColor: '#333',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#555',
+    alignItems: 'center',
+  },
+  toggleButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  toggleButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   bottomStackRow: {
     position: 'absolute',
@@ -1351,6 +1392,9 @@ const styles = StyleSheet.create({
   bottomButtonDisabled: {
     backgroundColor: '#555',
     opacity: 0.5,
+  },
+  bottomButtonActive: {
+    backgroundColor: '#22c55e',
   },
   buttonText: {
     color: '#fff',
