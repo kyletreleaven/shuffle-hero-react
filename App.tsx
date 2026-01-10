@@ -1043,16 +1043,31 @@ export default function App() {
 
       {/* Time Remaining Display - positioned over the track, below deck row */}
       <View style={[styles.timeDisplay, { top: topDeckHeight + 10 }]}>
-        <Text style={styles.timeText}>
           {scrollSpeed > 0 ? (() => {
             const timePerRound = scrollHelper.timePerRound;
             const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
-            const currentRoundTime = timePerRound - elapsed;
+          const currentRoundTime = Math.max(0, timePerRound - elapsed);
             const remainingRounds = numberOfRounds - currentRound - 1;
             const totalTime = currentRoundTime + (remainingRounds * timePerRound);
-            return `Round ${currentRound + 1}/${numberOfRounds} | ${currentRoundTime.toFixed(1)}s | Total: ${totalTime.toFixed(1)}s`;
-          })() : '∞'}
-        </Text>
+          return (
+            <View style={styles.timeDisplayRow}>
+              <View style={styles.timeCell}>
+                <Text style={styles.timeLabelText}>Round</Text>
+                <Text style={styles.timeValueText}>{currentRound + 1}/{numberOfRounds}</Text>
+              </View>
+              <View style={styles.timeCellDivider} />
+              <View style={styles.timeCell}>
+                <Text style={styles.timeLabelText}>This Round</Text>
+                <Text style={styles.timeValueText}>{currentRoundTime.toFixed(1)}s</Text>
+              </View>
+              <View style={styles.timeCellDivider} />
+              <View style={styles.timeCell}>
+                <Text style={styles.timeLabelText}>Total</Text>
+                <Text style={styles.timeValueText}>{totalTime.toFixed(1)}s</Text>
+              </View>
+            </View>
+          );
+        })() : <Text style={styles.timeValueText}>∞</Text>}
         {SHOW_DEBUG_HUD && numberOfCards <= 40 && (
           <Text style={styles.sequenceText}>
             {permutation.map(n => n + 1).join(' ')}
@@ -1510,13 +1525,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 250, // Above top deck row and card overlay
   },
-  timeText: {
+  timeDisplayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  timeCell: {
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  timeCellDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    marginHorizontal: 12,
+  },
+  timeLabelText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 11,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  timeValueText: {
     color: '#c9b620ff',
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
     textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   sequenceText: {
     color: '#22c55e',
