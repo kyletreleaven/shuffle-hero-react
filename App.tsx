@@ -521,6 +521,7 @@ export default function App() {
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [showGoalDeck, setShowGoalDeck] = useState(false);
+  const [faceUp, setFaceUp] = useState(true);
 
   // Dynamic top deck height based on whether goal deck is shown
   const topDeckHeight = showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE;
@@ -636,6 +637,7 @@ export default function App() {
           if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
           if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
+          if (prefs.faceUp !== undefined) setFaceUp(prefs.faceUp);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
           }
@@ -657,6 +659,7 @@ export default function App() {
           numberOfLanes,
           scrollSpeed,
           showGoalDeck,
+          faceUp,
         };
         const prefsString = JSON.stringify(prefs);
 
@@ -671,7 +674,7 @@ export default function App() {
     };
 
     savePreferences();
-  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck]);
+  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck, faceUp]);
 
   const handleScrollYChange = setScrollY;
 
@@ -1019,7 +1022,7 @@ export default function App() {
               },
             ]}
           >
-            <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>
+            {faceUp && <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>}
           </View>
         ))}
         {/* Goal deck (in row above source deck) - shows target permutation */}
@@ -1043,12 +1046,12 @@ export default function App() {
 
       {/* Time Remaining Display - positioned over the track, below deck row */}
       <View style={[styles.timeDisplay, { top: topDeckHeight + 10 }]}>
-          {scrollSpeed > 0 ? (() => {
-            const timePerRound = scrollHelper.timePerRound;
-            const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
+        {scrollSpeed > 0 ? (() => {
+          const timePerRound = scrollHelper.timePerRound;
+          const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
           const currentRoundTime = Math.max(0, timePerRound - elapsed);
-            const remainingRounds = numberOfRounds - currentRound - 1;
-            const totalTime = currentRoundTime + (remainingRounds * timePerRound);
+          const remainingRounds = numberOfRounds - currentRound - 1;
+          const totalTime = currentRoundTime + (remainingRounds * timePerRound);
           return (
             <View style={styles.timeDisplayRow}>
               <View style={styles.timeCell}>
@@ -1102,6 +1105,12 @@ export default function App() {
             onPress={() => setShowGoalDeck(!showGoalDeck)}
           >
             <Text style={styles.buttonText}>Goal</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, faceUp && styles.bottomButtonActive]}
+            onPress={() => setFaceUp(!faceUp)}
+          >
+            <Text style={styles.buttonText}>Faces</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
