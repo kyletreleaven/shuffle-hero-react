@@ -613,7 +613,7 @@ export default function App() {
       }
     }
     return generatedNotes;
-  }, [shuffle.seqs[currentRound]]);
+  }, [shuffle.seqs[currentRound], scrollHelper]);
 
   useEffect(() => {
     // Lock to landscape mode but allow both orientations
