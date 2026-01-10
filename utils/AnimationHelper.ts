@@ -106,12 +106,13 @@ export function calculateDeckXPositions(
 ): number[] {
   if (remainingCards === 0) return [];
 
-  const positions: number[] = [];
-  for (let i = 0; i < remainingCards; i++) {
-    const centerX = centerXFn(i, containerWidth, cardWidth, remainingCards);
-    positions.push(centerX - cardWidth / 2); // Convert centerline to left edge
-  }
+  const gaps = getCardSpacing(remainingCards, cardWidth, containerWidth);
+  const deckWidth = cardWidth + sum(gaps);
 
+  const positions: number[] = [cardWidth / 2 + (containerWidth - deckWidth) / 2];
+  for (let i = 0; i < remainingCards - 1; i++) {
+    positions.push(positions[i] + gaps[i]);
+  }
   return positions;
 }
 
@@ -251,6 +252,47 @@ export function interpolatePosition(
     rotation: (from.rotation || 0) + ((to.rotation || 0) - (from.rotation || 0)) * t + midRotation,
     scale: (from.scale || 1) + ((to.scale || 1) - (from.scale || 1)) * t,
   };
+}
+
+const logisticFn = (x: number) => Math.pow(1 + Math.exp(-x), -1);
+
+const range = (n: number) => [...Array(n).keys()];
+const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+
+function getCardSpacing(
+  numCards: number,
+  cardWidth: number,
+  fillWidth: number,
+  knee: number = .6,  // 0-1, where in the normalized range to place the "knee"
+  intensity: number = 20,  // how fast to drop off
+): number[] {
+
+  // Smooth decay, approx. unit until knee, then approx. zero.
+  const warpFn = (x: number) => 1 - logisticFn(intensity * (x - knee));
+
+  // Calculate # _gaps_ that fit in fillWidth.
+  const nGaps = fillWidth / cardWidth - 1;
+
+  // Calculate normalization.
+  const [k1, x1] = [0, 0];  // First gap embedded at x=0.
+  const [k2, x2] = [nGaps - 1, 1];  // Final _accomodated_ gap embedded at x=1.
+
+  const m = (x2 - x1) / (k2 - k1);
+  const b = x1 - m * k1;  // x1 = m * k1 + b => b = x1 - m * k1
+
+  // Calculate normalized spacing.
+  const xs = range(numCards - 1).map(k => m * k + b);
+  const gaps = xs.map(warpFn);
+
+  // Compute scaling.
+  // cardWidth + alpha * total gap -> fillWidth ==> alpha = (fillWidth - cardWidth) / total gap
+  // _But_, alpha * gaps[0] <= cardWidth  ==>  alpha <= cardWidth / gaps[0]
+  const alpha = Math.min(
+    (fillWidth - cardWidth) / sum(gaps),
+    cardWidth / gaps[0]
+  );
+
+  return gaps.map(x => alpha * x);
 }
 
 /**
