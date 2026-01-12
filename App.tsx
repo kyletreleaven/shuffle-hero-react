@@ -574,7 +574,10 @@ export default function App() {
   const reShuffle = (n?: number) => setPerm(samplePermutation(n ?? numberOfCards));
   const reverse = () => setPerm(ShuffleUtil.invertPerm(permutation));
 
-  const setNumberOfCards = (n: number) => reShuffle(n);
+  const setNumberOfCards = (n: number) => {
+    if (n === numberOfCards) return;
+    reShuffle(n);
+  };
 
   const setCurrentRound = (round: number) => {
     setShuffleState(prev => ({ ...prev, currentRound: round }));
