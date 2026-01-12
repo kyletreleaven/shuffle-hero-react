@@ -1015,8 +1015,20 @@ export default function App() {
         </View>
       </View>
 
-      {/* Bottom stack row - visual background only */}
-      <View style={styles.bottomStackRow} />
+      {/* Bottom stack row with pile labels */}
+      <View style={styles.bottomStackRow}>
+        {Array.from({ length: numberOfLanes }).map((_, i) => (
+          <View
+            key={`pile-label-${i}`}
+            style={[
+              styles.pileLabelContainer,
+              { left: i * laneWidth, width: laneWidth }
+            ]}
+          >
+            <Text style={styles.pileLabel}>Pile {i + 1}</Text>
+          </View>
+        ))}
+      </View>
 
       {/* Unified card overlay - all cards rendered with direct positioning */}
       <View style={styles.cardOverlay} pointerEvents="none">
@@ -1279,8 +1291,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10, 10, 10, 0.9)',
     borderTopWidth: 2,
     borderTopColor: '#333',
-    flexDirection: 'row',
     zIndex: 100,
+  },
+  pileLabelContainer: {
+    position: 'absolute',
+    top: -20,
+    alignItems: 'center',
+  },
+  pileLabel: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   cardOverlay: {
     position: 'absolute',
