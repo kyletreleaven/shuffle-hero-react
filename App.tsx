@@ -1010,11 +1010,7 @@ export default function App() {
           {showGoalDeck && (
             <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING }]}>Goal Deck</Text>
           )}
-          <Text style={styles.deckLabel}>
-            {cardStates.every(c => c.state === 'collected')
-              ? `Round ${currentRound + 1}/${numberOfRounds} Done`
-              : `Round ${currentRound + 1}/${numberOfRounds} Deck`}
-          </Text>
+          <Text style={styles.deckLabel}>Current Deck</Text>
         </View>
       </View>
 
@@ -1069,6 +1065,17 @@ export default function App() {
             <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
           </View>
         ))}
+      </View>
+
+      {/* Round status - centered on track */}
+      <View style={[styles.roundStatusDisplay, { top: topDeckHeight + 10 }]}>
+        <Text style={styles.roundStatusText}>
+          {cardStates.every(c => c.state === 'collected')
+            ? `Round ${currentRound + 1}/${numberOfRounds} - Finished`
+            : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
+              ? `Round ${currentRound + 1}/${numberOfRounds} - Dealing`
+              : `Round ${currentRound + 1}/${numberOfRounds} - Stacking`}
+        </Text>
       </View>
 
       {/* Remaining Display - positioned in top right margin */}
@@ -1582,6 +1589,24 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     fontWeight: '600',
+  },
+  roundStatusDisplay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 250,
+  },
+  roundStatusText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 20,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   remainingDisplay: {
     position: 'absolute',
