@@ -1081,15 +1081,15 @@ export default function App() {
           return (
             <>
               <View style={styles.remainingRow}>
-                <Text style={styles.remainingLabel}>Cards</Text>
+                <Text style={styles.remainingLabel}>Cards in Round</Text>
                 <Text style={styles.remainingValue}>{cardsRemaining}</Text>
               </View>
               <View style={styles.remainingRow}>
-                <Text style={styles.remainingLabel}>Round</Text>
+                <Text style={styles.remainingLabel}>Time in Round</Text>
                 <Text style={styles.remainingValue}>{currentRoundTime.toFixed(1)}s</Text>
               </View>
               <View style={styles.remainingRow}>
-                <Text style={styles.remainingLabel}>Total</Text>
+                <Text style={styles.remainingLabel}>Time in Shuffle</Text>
                 <Text style={styles.remainingValue}>{totalTime.toFixed(1)}s</Text>
               </View>
             </>
@@ -1255,8 +1255,8 @@ const styles = StyleSheet.create({
   },
   deckLabel: {
     color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     height: CARD_HEIGHT,
