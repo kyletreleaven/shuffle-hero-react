@@ -1000,8 +1000,20 @@ export default function App() {
         </AutoScrollView>
       </View>
 
-      {/* Top deck row - fixed position overlay (background only, decks rendered in cardOverlay) */}
-      <View style={[styles.topDeckRow, { height: topDeckHeight }]} />
+      {/* Top deck row - fixed position overlay with labels */}
+      <View style={[styles.topDeckRow, { height: topDeckHeight }]}>
+        {/* Left margin labels - positioned right up against the deck */}
+        <View style={[styles.deckLabelsLeft, { width: (deckXPositions[0] ?? 0) - 8 }]}>
+          {showGoalDeck && (
+            <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING }]}>Goal Deck</Text>
+          )}
+          <Text style={styles.deckLabel}>
+            {cardStates.every(c => c.state === 'collected')
+              ? `Round ${currentRound + 1}/${numberOfRounds} Done`
+              : `Round ${currentRound + 1}/${numberOfRounds} Deck`}
+          </Text>
+        </View>
+      </View>
 
       {/* Bottom stack row - visual background only */}
       <View style={styles.bottomStackRow} />
@@ -1044,33 +1056,33 @@ export default function App() {
         ))}
       </View>
 
-      {/* Time Remaining Display - positioned over the track, below deck row */}
-      <View style={[styles.timeDisplay, { top: topDeckHeight + 10 }]}>
+      {/* Remaining Display - positioned in top right margin */}
+      <View style={styles.remainingDisplay}>
+        <Text style={styles.remainingHeader}>Remaining:</Text>
         {scrollSpeed > 0 ? (() => {
           const timePerRound = scrollHelper.timePerRound;
           const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
           const currentRoundTime = Math.max(0, timePerRound - elapsed);
           const remainingRounds = numberOfRounds - currentRound - 1;
           const totalTime = currentRoundTime + (remainingRounds * timePerRound);
+          const cardsRemaining = cardStates.filter(c => c.state === 'deck' || c.state === 'falling').length;
           return (
-            <View style={styles.timeDisplayRow}>
-              <View style={styles.timeCell}>
-                <Text style={styles.timeLabelText}>Round</Text>
-                <Text style={styles.timeValueText}>{currentRound + 1}/{numberOfRounds}</Text>
+            <>
+              <View style={styles.remainingRow}>
+                <Text style={styles.remainingLabel}>Cards</Text>
+                <Text style={styles.remainingValue}>{cardsRemaining}</Text>
               </View>
-              <View style={styles.timeCellDivider} />
-              <View style={styles.timeCell}>
-                <Text style={styles.timeLabelText}>This Round</Text>
-                <Text style={styles.timeValueText}>{currentRoundTime.toFixed(1)}s</Text>
+              <View style={styles.remainingRow}>
+                <Text style={styles.remainingLabel}>Round</Text>
+                <Text style={styles.remainingValue}>{currentRoundTime.toFixed(1)}s</Text>
               </View>
-              <View style={styles.timeCellDivider} />
-              <View style={styles.timeCell}>
-                <Text style={styles.timeLabelText}>Total</Text>
-                <Text style={styles.timeValueText}>{totalTime.toFixed(1)}s</Text>
+              <View style={styles.remainingRow}>
+                <Text style={styles.remainingLabel}>Total</Text>
+                <Text style={styles.remainingValue}>{totalTime.toFixed(1)}s</Text>
               </View>
-            </View>
+            </>
           );
-        })() : <Text style={styles.timeValueText}>∞</Text>}
+        })() : <Text style={styles.remainingValue}>∞</Text>}
         {SHOW_DEBUG_HUD && numberOfCards <= 40 && (
           <Text style={styles.sequenceText}>
             {permutation.map(n => n + 1).join(' ')}
@@ -1216,9 +1228,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(10, 10, 10, 0.9)',
     borderBottomWidth: 2,
     borderBottomColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
     zIndex: 100,
+    paddingLeft: 10,
+  },
+  deckLabelsLeft: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+  deckLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    height: CARD_HEIGHT,
+    lineHeight: CARD_HEIGHT,
+    textAlign: 'right',
+    paddingRight: 10,
   },
   toggleButton: {
     backgroundColor: '#333',
@@ -1525,48 +1557,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  timeDisplay: {
+  remainingDisplay: {
     position: 'absolute',
-    top: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 250, // Above top deck row and card overlay
-  },
-  timeDisplayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    padding: 10,
+    zIndex: 250,
+    minWidth: 100,
   },
-  timeCell: {
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  timeCellDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    marginHorizontal: 12,
-  },
-  timeLabelText: {
+  remainingHeader: {
     color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    marginBottom: 6,
   },
-  timeValueText: {
+  remainingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  remainingLabel: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 12,
+    marginRight: 12,
+  },
+  remainingValue: {
     color: '#c9b620ff',
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
     fontVariant: ['tabular-nums'],
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    minWidth: 50,
+    textAlign: 'right',
   },
   sequenceText: {
     color: '#22c55e',
