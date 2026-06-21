@@ -496,32 +496,26 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               onChange={setScrollSpeed}
             />
 
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.toggleButton, animated && styles.toggleButtonActive]}
-                onPress={() => setAnimated(!animated)}
-              >
-                <Text style={styles.toggleButtonText}>Animated</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.checkboxRow} onPress={() => setAnimated(!animated)}>
+              <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
+                {animated && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>Animated</Text>
+            </TouchableOpacity>
 
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.toggleButton, faceUp && styles.toggleButtonActive]}
-                onPress={() => setFaceUp(!faceUp)}
-              >
-                <Text style={styles.toggleButtonText}>Show faces</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
+              <View style={[styles.checkbox, faceUp && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                {faceUp && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+              </View>
+              <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show card values</Text>
+            </TouchableOpacity>
 
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.toggleButton, showGoalDeck && styles.toggleButtonActive]}
-                onPress={() => setShowGoalDeck(!showGoalDeck)}
-              >
-                <Text style={styles.toggleButtonText}>Show goal</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.checkboxRow} onPress={() => setShowGoalDeck(!showGoalDeck)} disabled={!animated}>
+              <View style={[styles.checkbox, showGoalDeck && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                {showGoalDeck && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+              </View>
+              <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show goal deck</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
@@ -574,7 +568,7 @@ export default function App() {
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [showGoalDeck, setShowGoalDeck] = useState(false);
   const [faceUp, setFaceUp] = useState(true);
-  const [animated, setAnimated] = useState(true);
+  const [animated, setAnimated] = useState(false);
   const [shuffleHoldReady, setShuffleHoldReady] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
@@ -1374,23 +1368,45 @@ function makeStyles(scale: number) {
       textAlign: 'right',
       paddingRight: s(10),
     },
-    toggleButton: {
-      backgroundColor: 'rgba(80, 90, 160, 0.4)',
-      paddingHorizontal: f(16),
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: f(8),
-      borderRadius: f(8),
-      borderWidth: 1,
-      borderColor: 'rgba(100, 110, 180, 0.4)',
+      gap: f(10),
+    },
+    checkbox: {
+      width: f(18),
+      height: f(18),
+      borderRadius: f(3),
+      borderWidth: 2,
+      borderColor: '#8b9de8',
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
       alignItems: 'center',
     },
-    toggleButtonActive: {
+    checkboxChecked: {
       backgroundColor: '#6875c4',
-      borderColor: '#8b9de8',
+      borderColor: '#6875c4',
     },
-    toggleButtonText: {
+    checkmark: {
       color: '#fff',
       fontSize: f(12),
-      fontWeight: '600',
+      fontWeight: '700',
+      lineHeight: f(14),
+    },
+    checkboxLabel: {
+      color: '#dde1f5',
+      fontSize: f(13),
+    },
+    checkboxDisabled: {
+      borderColor: 'rgba(139, 157, 232, 0.3)',
+      backgroundColor: 'rgba(104, 117, 196, 0.25)',
+    },
+    checkmarkDisabled: {
+      color: 'rgba(255, 255, 255, 0.35)',
+    },
+    checkboxLabelDisabled: {
+      color: 'rgba(221, 225, 245, 0.3)',
     },
     bottomStackRow: {
       position: 'absolute',
