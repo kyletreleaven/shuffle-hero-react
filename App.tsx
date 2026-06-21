@@ -5,7 +5,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
-import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
+import { ScrollHelper, BASE_CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
 import { calculateDeckXPositions } from './utils/AnimationHelper';
 
 const LANE_COUNT = 5;
@@ -14,13 +14,15 @@ const SCROLL_SPEED = 1.5; // Cards per second (configurable)
 const SHOW_DEBUG_HUD = false; // Toggle debug HUD visibility
 const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user preferences
 
-// Unified track view layout constants
-const TOP_DECK_HEIGHT_SINGLE = 80;   // Height for source deck only
-const TOP_DECK_HEIGHT_DOUBLE = 150;  // Height for goal deck + source deck rows
-const BOTTOM_STACK_HEIGHT = 100; // Height for landing stacks at bottom
-const CARD_WIDTH = 40;
-const CARD_HEIGHT = 60;
-const DECK_ROW_PADDING = 8;      // Padding between deck rows
+// Base layout constants — scaled at runtime relative to BASE_SCREEN_WIDTH.
+// Base values are tuned for Pixel 4a (393dp logical width); other devices scale proportionally.
+const BASE_SCREEN_WIDTH = 393;
+const BASE_TOP_DECK_HEIGHT_SINGLE = 80;
+const BASE_TOP_DECK_HEIGHT_DOUBLE = 150;
+const BASE_BOTTOM_STACK_HEIGHT = 100;
+const BASE_CARD_WIDTH = 40;
+const BASE_CARD_HEIGHT = 60;
+const BASE_DECK_ROW_PADDING = 8;
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -57,6 +59,8 @@ type NumberOfCardsControlProps = {
 };
 
 function NumberOfCardsControl({ value, onChange }: NumberOfCardsControlProps) {
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   const presets = [10, 40, 52, 60, 100];
 
   return (
@@ -120,6 +124,8 @@ type NumberOfLanesControlProps = {
 };
 
 function NumberOfLanesControl({ value, onChange }: NumberOfLanesControlProps) {
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   const presets = [4, 5, 6, 7];
 
   return (
@@ -215,6 +221,8 @@ type SpeedControlProps = {
 };
 
 function SpeedControl({ value, onChange }: SpeedControlProps) {
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   return (
     <View style={styles.settingControl}>
       <View style={styles.sliderHeader}>
@@ -450,6 +458,8 @@ function AutoScrollView({
 }
 
 function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed }: MenuPanelProps) {
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   return (
     <Modal
       visible={visible}
@@ -513,6 +523,18 @@ export default function App() {
   const windowDimensions = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
 
+  // Scale based on the short dimension so landscape mode doesn't inflate sizes.
+  // The app runs in landscape, where width is the long edge and height is the short edge.
+  const scale = Math.min(windowDimensions.width, windowDimensions.height) / BASE_SCREEN_WIDTH;
+  const styles = useMemo(() => makeStyles(scale), [scale]);
+  const CARD_WIDTH = Math.round(BASE_CARD_WIDTH * scale);
+  const CARD_HEIGHT = Math.round(BASE_CARD_HEIGHT * scale);
+  const CARD_SPACING = Math.round(BASE_CARD_SPACING * scale);
+  const TOP_DECK_HEIGHT_SINGLE = Math.round(BASE_TOP_DECK_HEIGHT_SINGLE * scale);
+  const TOP_DECK_HEIGHT_DOUBLE = Math.round(BASE_TOP_DECK_HEIGHT_DOUBLE * scale);
+  const BOTTOM_STACK_HEIGHT = Math.round(BASE_BOTTOM_STACK_HEIGHT * scale);
+  const DECK_ROW_PADDING = Math.round(BASE_DECK_ROW_PADDING * scale);
+
   // Autoscroll state management
   const autoScrollState = useAutoScrollViewState();
   const { isTouching, isRegularScrolling, isMomentumScrolling, isScrolling, awaitingMomentumScroll, isPaused, setIsPaused, inhibitAutoScroll } = autoScrollState;
@@ -542,6 +564,7 @@ export default function App() {
     Math.max(scrollSpeed, 0.01),  // for sensible y updates while speed is zero
     numberOfCards,
     windowDimensions.height,
+    CARD_SPACING,
   );
 
   const initialScrollY = scrollHelper.initialScrollY;
@@ -988,6 +1011,8 @@ export default function App() {
                 style={[
                   styles.ghostNote,
                   {
+                    width: CARD_WIDTH,
+                    height: CARD_HEIGHT,
                     borderColor: note.color,
                     left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
                     top: note.position,
@@ -1008,14 +1033,14 @@ export default function App() {
         {/* Left margin labels - positioned right up against the deck */}
         <View style={[styles.deckLabelsLeft, { width: (deckXPositions[0] ?? 0) - 8 }]}>
           {showGoalDeck && (
-            <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING }]}>Goal Deck</Text>
+            <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING, height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Goal Deck</Text>
           )}
-          <Text style={styles.deckLabel}>Current Deck</Text>
+          <Text style={[styles.deckLabel, { height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Current Deck</Text>
         </View>
       </View>
 
       {/* Bottom stack row with pile labels */}
-      <View style={styles.bottomStackRow}>
+      <View style={[styles.bottomStackRow, { height: BOTTOM_STACK_HEIGHT }]}>
         {Array.from({ length: numberOfLanes }).map((_, i) => (
           <View
             key={`pile-label-${i}`}
@@ -1038,6 +1063,8 @@ export default function App() {
             style={[
               styles.deckCard,
               {
+                width: CARD_WIDTH,
+                height: CARD_HEIGHT,
                 backgroundColor: color,
                 left: x,
                 top: y,
@@ -1056,6 +1083,8 @@ export default function App() {
               styles.deckCard,
               styles.goalDeckCard,
               {
+                width: CARD_WIDTH,
+                height: CARD_HEIGHT,
                 left: deckXPositions[displayIndex],
                 top: goalDeckY,
                 zIndex: numberOfCards - displayIndex, // Earlier cards on top, below source deck
@@ -1232,427 +1261,423 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  trackPanelFull: {
-    flex: 1,
-    position: 'relative',
-  },
-  topDeckRow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    // height is set dynamically based on showGoalDeck
-    backgroundColor: 'rgba(10, 10, 10, 0.9)',
-    borderBottomWidth: 2,
-    borderBottomColor: '#333',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
-    zIndex: 100,
-    paddingLeft: 10,
-  },
-  deckLabelsLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  deckLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 14,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    height: CARD_HEIGHT,
-    lineHeight: CARD_HEIGHT,
-    textAlign: 'right',
-    paddingRight: 10,
-  },
-  toggleButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#555',
-    alignItems: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  toggleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  bottomStackRow: {
-    position: 'absolute',
-    bottom: 70, // Above the bottom button row
-    left: 0,
-    right: 0,
-    height: BOTTOM_STACK_HEIGHT,
-    backgroundColor: 'rgba(10, 10, 10, 0.9)',
-    borderTopWidth: 2,
-    borderTopColor: '#333',
-    zIndex: 100,
-  },
-  pileLabelContainer: {
-    position: 'absolute',
-    top: -20,
-    alignItems: 'center',
-  },
-  pileLabel: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  cardOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 150,
-  },
-  placeholderText: {
-    color: '#666',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  deckCard: {
-    position: 'absolute',
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 3,
-  },
-  goalDeckCard: {
-    backgroundColor: '#444',
-    borderColor: '#888',
-  },
-  deckCardNumber: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  scrollView: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  scrollContent: {
-    alignItems: 'center',
-  },
-  track: {
-    backgroundColor: '#2a2a2a',
-    flexDirection: 'row',
-    borderLeftWidth: 2,
-    borderRightWidth: 2,
-    borderColor: '#4a4a4a',
-  },
-  lane: {
-    flex: 1,
-    borderRightWidth: 1,
-    borderColor: '#4a4a4a',
-  },
-  ghostNote: {
-    position: 'absolute',
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  ghostNoteNumber: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    opacity: 0.7,
-  },
-  debugHUD: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#4a4a4a',
-  },
-  debugText: {
-    color: '#fff',
-    fontSize: 12,
-    fontFamily: 'monospace',
-    marginVertical: 2,
-  },
-  bottomButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#1a1a1a',
-    borderTopWidth: 2,
-    borderTopColor: '#4a4a4a',
-    zIndex: 200, // Above cardOverlay (150) - card zIndex values are confined within overlay's stacking context
-  },
-  centeredButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  navigationButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  bottomButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  bottomButtonDisabled: {
-    backgroundColor: '#555',
-    opacity: 0.5,
-  },
-  bottomButtonActive: {
-    backgroundColor: '#22c55e',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Adjust last number (0.0-1.0) for overlay darkness
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  menuPanel: {
-    width: '60%',
-    maxWidth: 500,
-    height: '80%',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-  },
-  menuScrollView: {
-    flex: 1,
-  },
-  menuScrollContent: {
-    padding: 40,
-    justifyContent: 'center',
-    minHeight: '100%',
-  },
-  menuTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 40,
-    textAlign: 'center',
-    color: '#fff',
-  },
-  settingControl: {
-    marginBottom: 20,
-  },
-  settingLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#fff',
-  },
-  settingButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  settingButton: {
-    backgroundColor: '#007AFF',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  settingButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  settingButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  settingValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    minWidth: 50,
-    textAlign: 'center',
-  },
-  homepageLink: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  homepageLinkText: {
-    color: '#007AFF',
-    fontSize: 16,
-    textDecorationLine: 'underline',
-  },
-  closeButton: {
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  presetButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginTop: 12,
-  },
-  presetButton: {
-    flex: 1,
-    backgroundColor: '#333',
-    paddingVertical: 12,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#555',
-  },
-  presetButtonSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  presetButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  presetButtonTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  sliderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sliderValue: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  slider: {
-    width: '100%',
-    height: 60,
-  },
-  sliderNotches: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    marginTop: -8,
-  },
-  sliderNotchText: {
-    color: '#999',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  roundStatusDisplay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 250,
-  },
-  roundStatusText: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 20,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  remainingDisplay: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 8,
-    padding: 10,
-    zIndex: 250,
-    minWidth: 100,
-  },
-  remainingHeader: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  remainingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  remainingLabel: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 12,
-    marginRight: 12,
-  },
-  remainingValue: {
-    color: '#c9b620ff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    fontVariant: ['tabular-nums'],
-    minWidth: 50,
-    textAlign: 'right',
-  },
-  sequenceText: {
-    color: '#22c55e',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-    fontFamily: 'monospace',
-    textShadowColor: 'rgba(0, 0, 0, 0.9)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-});
+function makeStyles(scale: number) {
+  const s = (n: number) => Math.round(n * scale);
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#1a1a1a',
+    },
+    trackPanelFull: {
+      flex: 1,
+      position: 'relative',
+    },
+    topDeckRow: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      // height is set dynamically based on showGoalDeck
+      backgroundColor: 'rgba(10, 10, 10, 0.9)',
+      borderBottomWidth: 2,
+      borderBottomColor: '#333',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-start',
+      zIndex: 100,
+      paddingLeft: s(10),
+    },
+    deckLabelsLeft: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+    },
+    deckLabel: {
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: s(14),
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      textAlign: 'right',
+      paddingRight: s(10),
+    },
+    toggleButton: {
+      backgroundColor: '#333',
+      paddingHorizontal: s(16),
+      paddingVertical: s(8),
+      borderRadius: s(8),
+      borderWidth: 2,
+      borderColor: '#555',
+      alignItems: 'center',
+    },
+    toggleButtonActive: {
+      backgroundColor: '#007AFF',
+      borderColor: '#007AFF',
+    },
+    toggleButtonText: {
+      color: '#fff',
+      fontSize: s(13),
+      fontWeight: '600',
+    },
+    bottomStackRow: {
+      position: 'absolute',
+      bottom: s(70), // Above the bottom button row
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(10, 10, 10, 0.9)',
+      borderTopWidth: 2,
+      borderTopColor: '#333',
+      zIndex: 100,
+    },
+    pileLabelContainer: {
+      position: 'absolute',
+      top: -s(20),
+      alignItems: 'center',
+    },
+    pileLabel: {
+      color: 'rgba(255, 255, 255, 0.6)',
+      fontSize: s(11),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    cardOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 150,
+    },
+    placeholderText: {
+      color: '#666',
+      fontSize: s(18),
+      fontWeight: '600',
+    },
+    deckCard: {
+      position: 'absolute',
+      borderRadius: s(6),
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#fff',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 2,
+      elevation: 3,
+    },
+    goalDeckCard: {
+      backgroundColor: '#444',
+      borderColor: '#888',
+    },
+    deckCardNumber: {
+      color: '#fff',
+      fontSize: s(14),
+      fontWeight: 'bold',
+      textShadowColor: 'rgba(0, 0, 0, 0.5)',
+      textShadowOffset: { width: 1, height: 1 },
+      textShadowRadius: 2,
+    },
+    scrollView: {
+      flex: 1,
+      marginBottom: 0,
+    },
+    scrollContent: {
+      alignItems: 'center',
+    },
+    track: {
+      backgroundColor: '#2a2a2a',
+      flexDirection: 'row',
+      borderLeftWidth: 2,
+      borderRightWidth: 2,
+      borderColor: '#4a4a4a',
+    },
+    lane: {
+      flex: 1,
+      borderRightWidth: 1,
+      borderColor: '#4a4a4a',
+    },
+    ghostNote: {
+      position: 'absolute',
+      borderRadius: s(6),
+      borderWidth: 2,
+      borderStyle: 'dashed',
+      backgroundColor: 'transparent',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    ghostNoteNumber: {
+      fontSize: s(18),
+      fontWeight: 'bold',
+      opacity: 0.7,
+    },
+    debugHUD: {
+      position: 'absolute',
+      top: s(10),
+      right: s(10),
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: s(12),
+      borderRadius: s(8),
+      borderWidth: 1,
+      borderColor: '#4a4a4a',
+    },
+    debugText: {
+      color: '#fff',
+      fontSize: s(12),
+      fontFamily: 'monospace',
+      marginVertical: 2,
+    },
+    bottomButtonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: s(10),
+      backgroundColor: '#1a1a1a',
+      borderTopWidth: 2,
+      borderTopColor: '#4a4a4a',
+      zIndex: 200, // Above cardOverlay (150) - card zIndex values are confined within overlay's stacking context
+    },
+    centeredButtons: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 1,
+      gap: s(8),
+    },
+    navigationButtons: {
+      flexDirection: 'row',
+      gap: s(8),
+    },
+    bottomButton: {
+      backgroundColor: '#007AFF',
+      paddingHorizontal: s(16),
+      paddingVertical: s(8),
+      borderRadius: s(8),
+      elevation: 3,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    bottomButtonDisabled: {
+      backgroundColor: '#555',
+      opacity: 0.5,
+    },
+    bottomButtonActive: {
+      backgroundColor: '#22c55e',
+    },
+    buttonText: {
+      color: '#fff',
+      fontSize: s(13),
+      fontWeight: '600',
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    menuPanel: {
+      width: '60%',
+      maxWidth: 500,
+      height: '80%',
+      backgroundColor: '#1a1a1a',
+      borderRadius: s(12),
+    },
+    menuScrollView: {
+      flex: 1,
+    },
+    menuScrollContent: {
+      padding: s(32),
+      justifyContent: 'center',
+      minHeight: '100%',
+    },
+    menuTitle: {
+      fontSize: s(20),
+      fontWeight: 'bold',
+      marginBottom: s(32),
+      textAlign: 'center',
+      color: '#fff',
+    },
+    settingControl: {
+      marginBottom: s(16),
+    },
+    settingLabel: {
+      fontSize: s(14),
+      fontWeight: '600',
+      marginBottom: s(6),
+      color: '#fff',
+    },
+    settingButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    settingButton: {
+      backgroundColor: '#007AFF',
+      width: s(36),
+      height: s(36),
+      borderRadius: s(18),
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    settingButtonDisabled: {
+      backgroundColor: '#ccc',
+    },
+    settingButtonText: {
+      color: '#fff',
+      fontSize: s(20),
+      fontWeight: 'bold',
+    },
+    settingValue: {
+      fontSize: s(16),
+      fontWeight: '600',
+      color: '#fff',
+      minWidth: s(40),
+      textAlign: 'center',
+    },
+    homepageLink: {
+      alignItems: 'center',
+      marginTop: s(16),
+      marginBottom: s(8),
+    },
+    homepageLinkText: {
+      color: '#007AFF',
+      fontSize: s(14),
+      textDecorationLine: 'underline',
+    },
+    closeButton: {
+      backgroundColor: '#FF3B30',
+      paddingHorizontal: s(24),
+      paddingVertical: s(12),
+      borderRadius: s(8),
+      alignItems: 'center',
+      marginTop: s(8),
+    },
+    presetButtons: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: s(6),
+      marginTop: s(10),
+    },
+    presetButton: {
+      flex: 1,
+      backgroundColor: '#333',
+      paddingVertical: s(10),
+      borderRadius: s(8),
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#555',
+    },
+    presetButtonSelected: {
+      backgroundColor: '#007AFF',
+      borderColor: '#007AFF',
+    },
+    presetButtonText: {
+      color: '#fff',
+      fontSize: s(14),
+      fontWeight: '600',
+    },
+    presetButtonTextSelected: {
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    sliderHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: s(6),
+    },
+    sliderValue: {
+      color: '#fff',
+      fontSize: s(16),
+      fontWeight: '600',
+    },
+    slider: {
+      width: '100%',
+      height: s(48),
+    },
+    sliderNotches: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: s(8),
+      marginTop: -s(8),
+    },
+    sliderNotchText: {
+      color: '#999',
+      fontSize: s(12),
+      fontWeight: '600',
+    },
+    roundStatusDisplay: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      zIndex: 250,
+    },
+    roundStatusText: {
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: s(16),
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      backgroundColor: 'rgba(0, 0, 0, 0)',
+      paddingHorizontal: s(12),
+      paddingVertical: s(4),
+      borderRadius: s(8),
+    },
+    remainingDisplay: {
+      position: 'absolute',
+      top: s(10),
+      right: s(10),
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      borderRadius: s(8),
+      padding: s(8),
+      zIndex: 250,
+      minWidth: s(80),
+    },
+    remainingHeader: {
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: s(10),
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: s(4),
+    },
+    remainingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginVertical: 2,
+    },
+    remainingLabel: {
+      color: 'rgba(255, 255, 255, 0.6)',
+      fontSize: s(11),
+      marginRight: s(10),
+    },
+    remainingValue: {
+      color: '#c9b620ff',
+      fontSize: s(12),
+      fontWeight: 'bold',
+      fontVariant: ['tabular-nums'],
+      minWidth: s(40),
+      textAlign: 'right',
+    },
+    sequenceText: {
+      color: '#22c55e',
+      fontSize: s(14),
+      fontWeight: '600',
+      marginTop: s(6),
+      fontFamily: 'monospace',
+      textShadowColor: 'rgba(0, 0, 0, 0.9)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-export const CARD_SPACING = 150; // Vertical spacing between cards
+export const BASE_CARD_SPACING = 150; // Vertical spacing between cards at base scale
 export const START_PADDING_SECONDS = 2; // Seconds of track at bottom
 
 export class ScrollHelper {
@@ -19,11 +19,12 @@ export class ScrollHelper {
     public readonly scrollCardsPerSec: number,
     public readonly numberOfCards: number,
     public readonly windowHeight: number,
+    public readonly cardSpacing: number = BASE_CARD_SPACING,
   ) {
-    this.scrollPixelsPerSec = scrollCardsPerSec * CARD_SPACING;
+    this.scrollPixelsPerSec = scrollCardsPerSec * cardSpacing;
 
     this.startPaddingPixels = windowHeight;
-    this.contentHeight = CARD_SPACING * (numberOfCards - 1);
+    this.contentHeight = cardSpacing * (numberOfCards - 1);
     this.endPaddingPixels = windowHeight;
     this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
 
@@ -35,10 +36,10 @@ export class ScrollHelper {
     this.scrollYBias = this.trackHeight - this.startPaddingPixels - this.windowHeight;
   }
 
-  get deps() { return [this.scrollCardsPerSec, this.numberOfCards, this.windowHeight]; }
+  get deps() { return [this.scrollCardsPerSec, this.numberOfCards, this.windowHeight, this.cardSpacing]; }
 
   cardY(cardIndex: number): number {
-    return this.trackHeight - this.startPaddingPixels - cardIndex * CARD_SPACING;
+    return this.trackHeight - this.startPaddingPixels - cardIndex * this.cardSpacing;
   }
 
   scrollY(trackTime: number): number {

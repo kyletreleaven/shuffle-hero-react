@@ -1,4 +1,4 @@
-import { ScrollHelper, CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
+import { ScrollHelper, BASE_CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
 
 describe('ScrollHelper', () => {
   test('cards should not jump when speed changes', () => {
