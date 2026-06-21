@@ -1170,11 +1170,17 @@ export default function App() {
       {/* Round status - centered on track */}
       <View style={[styles.roundStatusDisplay, { top: topDeckHeight + 10 }]}>
         <Text style={styles.roundStatusText}>
-          {cardStates.every(c => c.state === 'collected')
-            ? `Round ${currentRound + 1}/${numberOfRounds} - Finished`
-            : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
-              ? `Round ${currentRound + 1}/${numberOfRounds} - Dealing`
-              : `Round ${currentRound + 1}/${numberOfRounds} - Stacking`}
+          {`Round ${currentRound + 1}/${numberOfRounds} - ${
+            animated
+              ? cardStates.every(c => c.state === 'collected')
+                ? 'Finished'
+                : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
+                  ? 'Dealing'
+                  : 'Stacking'
+              : trackTime >= maxTrackTime
+                ? 'Finished'
+                : 'Dealing'
+          }`}
         </Text>
       </View>
 
