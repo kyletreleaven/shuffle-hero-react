@@ -693,7 +693,7 @@ export default function App() {
           if (prefs.numberOfLanes) setNumberOfLanes(prefs.numberOfLanes);
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
           if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
-          if (prefs.faceUp !== undefined) setFaceUp(prefs.faceUp);
+          if (prefs.showCardValues !== undefined) setFaceUp(prefs.showCardValues);
           if (prefs.animated !== undefined) setAnimated(prefs.animated);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
@@ -716,7 +716,7 @@ export default function App() {
           numberOfLanes,
           scrollSpeed,
           showGoalDeck,
-          faceUp,
+          showCardValues: faceUp,
           animated,
         };
         const prefsString = JSON.stringify(prefs);
