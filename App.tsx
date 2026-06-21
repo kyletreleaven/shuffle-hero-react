@@ -17,8 +17,6 @@ const STORAGE_KEY = 'shuffle-hero-preferences'; // localStorage key for user pre
 // Base layout constants — scaled at runtime relative to BASE_SCREEN_WIDTH.
 // Base values are tuned for Pixel 4a (393dp logical width); other devices scale proportionally.
 const BASE_SCREEN_WIDTH = 393;
-const BASE_TOP_DECK_HEIGHT_SINGLE = 80;
-const BASE_TOP_DECK_HEIGHT_DOUBLE = 150;
 const BASE_BOTTOM_STACK_HEIGHT = 100;
 const BASE_CARD_WIDTH = 40;
 const BASE_CARD_HEIGHT = 60;
@@ -611,10 +609,10 @@ export default function App() {
   const CARD_WIDTH = Math.min(Math.round(BASE_CARD_WIDTH * scale), BASE_CARD_WIDTH);
   const CARD_HEIGHT = Math.min(Math.round(BASE_CARD_HEIGHT * scale), BASE_CARD_HEIGHT);
   const CARD_SPACING = Math.round(BASE_CARD_SPACING * scale);
-  const TOP_DECK_HEIGHT_SINGLE = Math.round(BASE_TOP_DECK_HEIGHT_SINGLE * scale);
-  const TOP_DECK_HEIGHT_DOUBLE = Math.round(BASE_TOP_DECK_HEIGHT_DOUBLE * scale);
-  const BOTTOM_STACK_HEIGHT = Math.round(BASE_BOTTOM_STACK_HEIGHT * scale);
   const DECK_ROW_PADDING = Math.round(BASE_DECK_ROW_PADDING * scale);
+  const TOP_DECK_HEIGHT_SINGLE = CARD_HEIGHT + 2 * DECK_ROW_PADDING;
+  const TOP_DECK_HEIGHT_DOUBLE = 2 * CARD_HEIGHT + 3 * DECK_ROW_PADDING;
+  const BOTTOM_STACK_HEIGHT = Math.round(BASE_BOTTOM_STACK_HEIGHT * scale);
 
   // Autoscroll state management
   const autoScrollState = useAutoScrollViewState();
@@ -798,13 +796,12 @@ export default function App() {
   );
 
   // Computed positions based on window dimensions (more reliable than onLayout)
-  const BUTTON_ROW_HEIGHT = 70; // Height of bottom button row
   const goalDeckY = DECK_ROW_PADDING;
   const deckRowY = showGoalDeck
     ? DECK_ROW_PADDING + CARD_HEIGHT + DECK_ROW_PADDING
     : (topDeckHeight - CARD_HEIGHT) / 2;
   const trackTopY = topDeckHeight;
-  const trackBottomY = windowDimensions.height - BOTTOM_STACK_HEIGHT - BUTTON_ROW_HEIGHT;
+  const trackBottomY = windowDimensions.height - BOTTOM_STACK_HEIGHT;
   const stackRowY = trackBottomY + 10; // 10px padding inside stack row
 
 
@@ -1420,7 +1417,7 @@ function makeStyles(scale: number) {
     },
     bottomStackRow: {
       position: 'absolute',
-      bottom: s(70), // Above the bottom button row
+      bottom: 0,
       left: 0,
       right: 0,
       backgroundColor: 'rgba(15, 20, 50, 0.85)',
