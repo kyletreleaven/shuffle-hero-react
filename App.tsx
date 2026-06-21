@@ -527,8 +527,8 @@ export default function App() {
   // The app runs in landscape, where width is the long edge and height is the short edge.
   const scale = Math.min(windowDimensions.width, windowDimensions.height) / BASE_SCREEN_WIDTH;
   const styles = useMemo(() => makeStyles(scale), [scale]);
-  const CARD_WIDTH = Math.round(BASE_CARD_WIDTH * scale);
-  const CARD_HEIGHT = Math.round(BASE_CARD_HEIGHT * scale);
+  const CARD_WIDTH = Math.min(Math.round(BASE_CARD_WIDTH * scale), BASE_CARD_WIDTH);
+  const CARD_HEIGHT = Math.min(Math.round(BASE_CARD_HEIGHT * scale), BASE_CARD_HEIGHT);
   const CARD_SPACING = Math.round(BASE_CARD_SPACING * scale);
   const TOP_DECK_HEIGHT_SINGLE = Math.round(BASE_TOP_DECK_HEIGHT_SINGLE * scale);
   const TOP_DECK_HEIGHT_DOUBLE = Math.round(BASE_TOP_DECK_HEIGHT_DOUBLE * scale);
@@ -1263,6 +1263,7 @@ export default function App() {
 
 function makeStyles(scale: number) {
   const s = (n: number) => Math.round(n * scale);
+  const f = (n: number) => Math.min(Math.round(n * scale), n); // font: shrinks on small screens, never grows
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -1296,7 +1297,7 @@ function makeStyles(scale: number) {
     },
     deckLabel: {
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: s(14),
+      fontSize: f(14),
       fontWeight: '800',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1338,7 +1339,7 @@ function makeStyles(scale: number) {
     },
     pileLabel: {
       color: 'rgba(255, 255, 255, 0.6)',
-      fontSize: s(11),
+      fontSize: f(11),
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1353,7 +1354,7 @@ function makeStyles(scale: number) {
     },
     placeholderText: {
       color: '#666',
-      fontSize: s(18),
+      fontSize: f(18),
       fontWeight: '600',
     },
     deckCard: {
@@ -1375,7 +1376,7 @@ function makeStyles(scale: number) {
     },
     deckCardNumber: {
       color: '#fff',
-      fontSize: s(14),
+      fontSize: f(14),
       fontWeight: 'bold',
       textShadowColor: 'rgba(0, 0, 0, 0.5)',
       textShadowOffset: { width: 1, height: 1 },
@@ -1410,7 +1411,7 @@ function makeStyles(scale: number) {
       alignItems: 'center',
     },
     ghostNoteNumber: {
-      fontSize: s(18),
+      fontSize: f(18),
       fontWeight: 'bold',
       opacity: 0.7,
     },
@@ -1426,7 +1427,7 @@ function makeStyles(scale: number) {
     },
     debugText: {
       color: '#fff',
-      fontSize: s(12),
+      fontSize: f(12),
       fontFamily: 'monospace',
       marginVertical: 2,
     },
@@ -1497,7 +1498,7 @@ function makeStyles(scale: number) {
       minHeight: '100%',
     },
     menuTitle: {
-      fontSize: s(20),
+      fontSize: f(20),
       fontWeight: 'bold',
       marginBottom: s(32),
       textAlign: 'center',
@@ -1507,7 +1508,7 @@ function makeStyles(scale: number) {
       marginBottom: s(16),
     },
     settingLabel: {
-      fontSize: s(14),
+      fontSize: f(14),
       fontWeight: '600',
       marginBottom: s(6),
       color: '#fff',
@@ -1534,7 +1535,7 @@ function makeStyles(scale: number) {
       fontWeight: 'bold',
     },
     settingValue: {
-      fontSize: s(16),
+      fontSize: f(16),
       fontWeight: '600',
       color: '#fff',
       minWidth: s(40),
@@ -1547,7 +1548,7 @@ function makeStyles(scale: number) {
     },
     homepageLinkText: {
       color: '#007AFF',
-      fontSize: s(14),
+      fontSize: f(14),
       textDecorationLine: 'underline',
     },
     closeButton: {
@@ -1596,7 +1597,7 @@ function makeStyles(scale: number) {
     },
     sliderValue: {
       color: '#fff',
-      fontSize: s(16),
+      fontSize: f(16),
       fontWeight: '600',
     },
     slider: {
@@ -1611,7 +1612,7 @@ function makeStyles(scale: number) {
     },
     sliderNotchText: {
       color: '#999',
-      fontSize: s(12),
+      fontSize: f(12),
       fontWeight: '600',
     },
     roundStatusDisplay: {
@@ -1623,7 +1624,7 @@ function makeStyles(scale: number) {
     },
     roundStatusText: {
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: s(16),
+      fontSize: f(16),
       fontWeight: '800',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1644,7 +1645,7 @@ function makeStyles(scale: number) {
     },
     remainingHeader: {
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: s(10),
+      fontSize: f(10),
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1658,12 +1659,12 @@ function makeStyles(scale: number) {
     },
     remainingLabel: {
       color: 'rgba(255, 255, 255, 0.6)',
-      fontSize: s(11),
+      fontSize: f(11),
       marginRight: s(10),
     },
     remainingValue: {
       color: '#c9b620ff',
-      fontSize: s(12),
+      fontSize: f(12),
       fontWeight: 'bold',
       fontVariant: ['tabular-nums'],
       minWidth: s(40),
@@ -1671,7 +1672,7 @@ function makeStyles(scale: number) {
     },
     sequenceText: {
       color: '#22c55e',
-      fontSize: s(14),
+      fontSize: f(14),
       fontWeight: '600',
       marginTop: s(6),
       fontFamily: 'monospace',
