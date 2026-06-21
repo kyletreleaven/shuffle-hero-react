@@ -1267,7 +1267,7 @@ export default function App() {
             }}
             disabled={inhibitAutoScroll}
           >
-            <Text style={styles.buttonText}>Prev</Text>
+            <Text style={styles.buttonText}>Prev Round</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
@@ -1280,14 +1280,14 @@ export default function App() {
             }}
             disabled={inhibitAutoScroll}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={styles.buttonText}>Next Round</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={resetScrollY}
             disabled={inhibitAutoScroll}
           >
-            <Text style={styles.buttonText}>Restart</Text>
+            <Text style={styles.buttonText}>Restart Round</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
@@ -1566,8 +1566,8 @@ function makeStyles(scale: number) {
       backgroundColor: '#22c55e',
     },
     buttonText: {
-      color: '#fff',
-      fontSize: s(13),
+      color: '#dde1f5',
+      fontSize: s(10),
       fontWeight: '600',
     },
     overlay: {
