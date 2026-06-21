@@ -149,4 +149,19 @@ These are bugs and polish items found on a real phone. Address before release.
 
 ### Aspirational – Tutorial screens
 
-See item 2 above. Not a blocker for initial release but needed shortly after.
+See item 2 above. Not a blocker for initial release but needed shortly after.## Pre-release checklist (from device testing)
+
+- [ ] **Session persistence** — Audit what `AsyncStorage` currently saves and ensure all menu settings survive an app restart: number of cards, number of piles, scroll speed, Animated, Show card values, Show goal deck.
+- [ ] **Reset on parameter change** — When `numberOfLanes` or `numberOfCards` changes, reset `currentRound` to 0 and reset scroll position. The whole shuffle execution changes so there's no meaningful round to resume.
+- [ ] **Flicker on round/shuffle transition** — The old permutation/round renders for one frame before the scroll reset takes effect. Batch the new round/permutation and scroll reset into a single update so they land on the same frame.
+- [ ] **"Stacking" status in non-animated mode** — When `animated` is false, "Stacking" has no visual meaning. Treat it as Finished for display purposes.
+- [ ] **Round status header color** — Use the same highlight yellow as the rest of the status row (`#e8ff00`).
+- [ ] **Cap bar width** — Bar notes grow with lane width; add an absolute pixel cap (e.g. 80px) so they don't become unwieldy on wide screens or with few lanes.
+- [ ] **Menu stepper buttons too small** — Increase minimum touch target height for +/-1/+/-5 buttons (44px min) and increase the displayed value font size.
+- [ ] **Menu scroll unreliable** — The dismiss overlay may be swallowing scroll gestures. Investigate `pointerEvents` or touch propagation fix on the `ScrollView`.
+- [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone.
+- [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. Switch to `System.exit(0)` via a native module if needed.
+
+## Aspirational
+
+- [ ] **Tutorial screens** — See item 2 above.
