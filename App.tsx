@@ -21,6 +21,7 @@ const BASE_BOTTOM_STACK_HEIGHT = 100;
 const BASE_CARD_WIDTH = 40;
 const BASE_CARD_HEIGHT = 60;
 const BASE_DECK_ROW_PADDING = 8;
+const MIN_TOUCH_TARGET = 44;
 
 // Guitar Hero-style note colors
 const NOTE_COLORS = [
@@ -1630,9 +1631,9 @@ function makeStyles(scale: number) {
     },
     settingButton: {
       backgroundColor: '#6875c4',
-      width: f(30),
-      height: f(30),
-      borderRadius: f(15),
+      width: f(MIN_TOUCH_TARGET),
+      height: f(MIN_TOUCH_TARGET),
+      borderRadius: f(MIN_TOUCH_TARGET / 2),
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -1642,14 +1643,14 @@ function makeStyles(scale: number) {
     },
     settingButtonText: {
       color: '#fff',
-      fontSize: f(14),
+      fontSize: f(16),
       fontWeight: 'bold',
     },
     settingValue: {
-      fontSize: f(14),
-      fontWeight: '600',
+      fontSize: f(20),
+      fontWeight: '700',
       color: '#fff',
-      minWidth: f(32),
+      minWidth: f(40),
       textAlign: 'center',
     },
     homepageLink: {
