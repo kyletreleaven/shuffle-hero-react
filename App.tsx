@@ -1206,7 +1206,7 @@ export default function App() {
             <>
               <View style={styles.remainingRow}>
                 <Text style={styles.remainingLabel}>Cards in Round</Text>
-                <Text style={styles.remainingValue}>{cardsRemaining}</Text>
+                <Text style={styles.remainingValue}>{cardsRemaining}/{numberOfCards}</Text>
               </View>
               <View style={styles.remainingRow}>
                 <Text style={styles.remainingLabel}>Time in Round</Text>
