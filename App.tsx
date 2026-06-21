@@ -570,6 +570,7 @@ export default function App() {
   const [faceUp, setFaceUp] = useState(true);
   const [animated, setAnimated] = useState(false);
   const [shuffleHoldReady, setShuffleHoldReady] = useState(false);
+  const [prevHoldReady, setPrevHoldReady] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
   const topDeckHeight = animated
@@ -1243,7 +1244,7 @@ export default function App() {
             <Text style={styles.buttonText}>{shuffleHoldReady ? 'Reverse' : 'Shuffle'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled, prevHoldReady && styles.bottomButtonActive]}
             onPress={() => {
               const newRound = Math.max(0, currentRound - 1);
               if (newRound !== currentRound) {
@@ -1251,9 +1252,12 @@ export default function App() {
                 resetScrollY();
               }
             }}
+            onLongPress={() => setPrevHoldReady(true)}
+            onPressOut={() => { if (prevHoldReady) { setCurrentRound(0); resetScrollY(); setPrevHoldReady(false); } }}
+            delayLongPress={700}
             disabled={inhibitAutoScroll}
           >
-            <Text style={styles.buttonText}>Prev Round</Text>
+            <Text style={styles.buttonText}>{prevHoldReady ? 'Restart Shuffle' : 'Prev Round'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
