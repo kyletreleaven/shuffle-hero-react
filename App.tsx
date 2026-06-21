@@ -1397,7 +1397,7 @@ function makeStyles(scale: number) {
     },
     deckLabel: {
       color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: f(14),
+      fontSize: Math.min(s(10), 14),
       fontWeight: '800',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1439,7 +1439,7 @@ function makeStyles(scale: number) {
     },
     pileLabel: {
       color: 'rgba(255, 255, 255, 0.6)',
-      fontSize: f(11),
+      fontSize: Math.min(s(8), 11),
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -1548,7 +1548,7 @@ function makeStyles(scale: number) {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: s(10),
+      paddingVertical: Math.max(s(10), 14),
       paddingHorizontal: s(4),
       backgroundColor: '#6875c4',
       borderRightWidth: StyleSheet.hairlineWidth,
@@ -1569,8 +1569,9 @@ function makeStyles(scale: number) {
     },
     buttonText: {
       color: '#dde1f5',
-      fontSize: s(10),
+      fontSize: Math.max(s(10), 13),
       fontWeight: '600',
+      textAlign: 'center',
     },
     overlay: {
       flex: 1,
