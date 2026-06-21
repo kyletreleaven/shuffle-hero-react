@@ -49,19 +49,12 @@ type MenuPanelProps = {
   setNumberOfLanes: (value: number) => void;
   scrollSpeed: number;
   setScrollSpeed: (value: number) => void;
-  devMode: boolean;
-  setDevMode: (value: boolean) => void;
-};
-
-type AdvancedPanelProps = {
-  visible: boolean;
-  onClose: () => void;
+  animated: boolean;
+  setAnimated: (value: boolean) => void;
   showGoalDeck: boolean;
   setShowGoalDeck: (value: boolean) => void;
   faceUp: boolean;
   setFaceUp: (value: boolean) => void;
-  onReverse: () => void;
-  inhibitAutoScroll: boolean;
 };
 
 type NumberOfCardsControlProps = {
@@ -468,7 +461,7 @@ function AutoScrollView({
   );
 }
 
-function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed, devMode, setDevMode }: MenuPanelProps) {
+function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed, animated, setAnimated, showGoalDeck, setShowGoalDeck, faceUp, setFaceUp }: MenuPanelProps) {
   const { width, height } = useWindowDimensions();
   const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   return (
@@ -505,10 +498,28 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
 
             <View style={styles.settingControl}>
               <TouchableOpacity
-                style={[styles.toggleButton, devMode && styles.toggleButtonActive]}
-                onPress={() => setDevMode(!devMode)}
+                style={[styles.toggleButton, animated && styles.toggleButtonActive]}
+                onPress={() => setAnimated(!animated)}
               >
-                <Text style={styles.toggleButtonText}>Advanced mode</Text>
+                <Text style={styles.toggleButtonText}>Animated</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.toggleButton, faceUp && styles.toggleButtonActive]}
+                onPress={() => setFaceUp(!faceUp)}
+              >
+                <Text style={styles.toggleButtonText}>Show faces</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.toggleButton, showGoalDeck && styles.toggleButtonActive]}
+                onPress={() => setShowGoalDeck(!showGoalDeck)}
+              >
+                <Text style={styles.toggleButtonText}>Show goal</Text>
               </TouchableOpacity>
             </View>
 
@@ -518,60 +529,6 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
             >
               <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
             </TouchableOpacity>
-
-          </ScrollView>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-  );
-}
-
-function AdvancedPanel({ visible, onClose, showGoalDeck, setShowGoalDeck, faceUp, setFaceUp, onReverse, inhibitAutoScroll }: AdvancedPanelProps) {
-  const { width, height } = useWindowDimensions();
-  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
-  return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
-        <TouchableOpacity style={styles.menuPanel} activeOpacity={1} onPress={() => {}}>
-          <ScrollView
-            style={styles.menuScrollView}
-            contentContainerStyle={styles.menuScrollContent}
-          >
-            <Text style={styles.menuTitle}>Advanced</Text>
-
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.toggleButton, showGoalDeck && styles.toggleButtonActive]}
-                onPress={() => setShowGoalDeck(!showGoalDeck)}
-              >
-                <Text style={styles.toggleButtonText}>Goal deck</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.toggleButton, faceUp && styles.toggleButtonActive]}
-                onPress={() => setFaceUp(!faceUp)}
-              >
-                <Text style={styles.toggleButtonText}>Face up</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.settingControl}>
-              <TouchableOpacity
-                style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-                onPress={onReverse}
-                disabled={inhibitAutoScroll}
-              >
-                <Text style={styles.buttonText}>Reverse</Text>
-              </TouchableOpacity>
-            </View>
 
           </ScrollView>
         </TouchableOpacity>
@@ -617,12 +574,11 @@ export default function App() {
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [showGoalDeck, setShowGoalDeck] = useState(false);
   const [faceUp, setFaceUp] = useState(true);
-  const [devMode, setDevMode] = useState(true);
-  const [devPanelVisible, setDevPanelVisible] = useState(false);
+  const [animated, setAnimated] = useState(true);
   const [shuffleHoldReady, setShuffleHoldReady] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
-  const topDeckHeight = devMode
+  const topDeckHeight = animated
     ? (showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE)
     : 0;
 
@@ -742,7 +698,7 @@ export default function App() {
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
           if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
           if (prefs.faceUp !== undefined) setFaceUp(prefs.faceUp);
-          if (prefs.devMode !== undefined) setDevMode(prefs.devMode);
+          if (prefs.animated !== undefined) setAnimated(prefs.animated);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
           }
@@ -765,7 +721,7 @@ export default function App() {
           scrollSpeed,
           showGoalDeck,
           faceUp,
-          devMode,
+          animated,
         };
         const prefsString = JSON.stringify(prefs);
 
@@ -780,7 +736,7 @@ export default function App() {
     };
 
     savePreferences();
-  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck, faceUp, devMode]);
+  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck, faceUp, animated]);
 
   const handleScrollYChange = setScrollY;
 
@@ -1092,7 +1048,7 @@ export default function App() {
             ))}
 
             {/* Render notes: bars in normal mode, dashed card outlines in dev mode */}
-            {notes.map((note) => devMode ? (
+            {notes.map((note) => animated ? (
               <View
                 key={note.id}
                 style={[
@@ -1137,7 +1093,7 @@ export default function App() {
         </AutoScrollView>
 
         {/* Pile labels in normal mode: float at bottom of track, above button bar */}
-        {!devMode && (
+        {!animated && (
           <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row' }}>
             {Array.from({ length: numberOfLanes }, (_, i) => (
               <View key={i} style={{ flex: 1, alignItems: 'center', paddingBottom: Math.round(4 * scale) }}>
@@ -1149,7 +1105,7 @@ export default function App() {
       </View>
 
       {/* Top deck row - dev mode only */}
-      {devMode && (
+      {animated && (
         <View style={[styles.topDeckRow, { height: topDeckHeight }]}>
           <View style={[styles.deckLabelsLeft, { width: (deckXPositions[0] ?? 0) - 8 }]}>
             {showGoalDeck && (
@@ -1161,7 +1117,7 @@ export default function App() {
       )}
 
       {/* Bottom stack row with pile labels - dev mode only */}
-      {devMode && (
+      {animated && (
         <View style={[styles.bottomStackRow, { height: BOTTOM_STACK_HEIGHT }]}>
           {Array.from({ length: numberOfLanes }).map((_, i) => (
             <View
@@ -1175,7 +1131,7 @@ export default function App() {
       )}
 
       {/* Unified card overlay - dev mode only */}
-      {devMode && (
+      {animated && (
         <View style={styles.cardOverlay} pointerEvents="none">
           {cardScreenPositions.map(({ faceValue, x, y, zIndex, color }) => (
             <View
@@ -1332,14 +1288,6 @@ export default function App() {
           >
             <Text style={styles.buttonText}>{isPaused ? 'Resume' : 'Pause'}</Text>
           </TouchableOpacity>
-        {devMode && (
-          <TouchableOpacity
-            style={styles.bottomBarButton}
-            onPress={() => setDevPanelVisible(true)}
-          >
-            <Text style={styles.buttonText}>Dev</Text>
-          </TouchableOpacity>
-        )}
         {Platform.OS !== 'web' && (
           <TouchableOpacity
             style={styles.bottomBarButton}
@@ -1362,19 +1310,12 @@ export default function App() {
         }}
         scrollSpeed={scrollSpeed}
         setScrollSpeed={setScrollSpeed}
-        devMode={devMode}
-        setDevMode={setDevMode}
-      />
-
-      <AdvancedPanel
-        visible={devPanelVisible}
-        onClose={() => setDevPanelVisible(false)}
+        animated={animated}
+        setAnimated={setAnimated}
         showGoalDeck={showGoalDeck}
         setShowGoalDeck={setShowGoalDeck}
         faceUp={faceUp}
         setFaceUp={setFaceUp}
-        onReverse={reverse}
-        inhibitAutoScroll={inhibitAutoScroll}
       />
 
       <StatusBar style="auto" />
