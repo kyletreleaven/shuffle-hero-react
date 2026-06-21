@@ -619,6 +619,7 @@ export default function App() {
   const [faceUp, setFaceUp] = useState(true);
   const [devMode, setDevMode] = useState(true);
   const [devPanelVisible, setDevPanelVisible] = useState(false);
+  const [shuffleHoldReady, setShuffleHoldReady] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
   const topDeckHeight = devMode
@@ -1282,11 +1283,14 @@ export default function App() {
             <Text style={styles.buttonText}>Menu</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled, shuffleHoldReady && styles.bottomButtonActive]}
             onPress={() => reShuffle()}
+            onLongPress={() => setShuffleHoldReady(true)}
+            onPressOut={() => { if (shuffleHoldReady) { reverse(); setShuffleHoldReady(false); } }}
+            delayLongPress={700}
             disabled={inhibitAutoScroll}
           >
-            <Text style={styles.buttonText}>Shuffle</Text>
+            <Text style={styles.buttonText}>{shuffleHoldReady ? 'Reverse' : 'Shuffle'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
