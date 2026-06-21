@@ -1310,6 +1310,7 @@ export default function App() {
         numberOfLanes={numberOfLanes}
         setNumberOfLanes={(m) => {
           setNumberOfLanes(m);
+          setCurrentRound(0);
           resetScrollY();
         }}
         scrollSpeed={scrollSpeed}
