@@ -1093,7 +1093,7 @@ export default function App() {
                 style={[
                   styles.lane,
                   {
-                    backgroundColor: index % 2 === 0 ? 'rgba(0, 0, 0, 0.55)' : 'rgba(65, 65, 65, 0.35)',
+                    backgroundColor: index % 2 === 0 ? 'rgba(0, 0, 0, 0.72)' : 'rgba(90, 90, 110, 0.60)',
                     marginHorizontal: LANE_MARGIN,
                   }
                 ]}
