@@ -59,3 +59,22 @@
 - `ScrollHelper` currently uses hardcoded `CARD_SPACING` — refactor to accept it as a parameter so it stays in sync with the scaled value
 
 **Targets:** phone (small screen, high density), Android emulator (large resolution), web (variable viewport width).
+
+
+# Test notes
+
+- can we hide the window handle at the bottom used for swiping
+- stacking should not be a valid round state when not animated
+- when changing the number of piles, the current round can become too large
+- round header also in the yellow font used elsewhere
+- cap the bar width so it's never too big
+- make the +/-1 and +/-5 buttons bigger; also the # cards font
+- why is menu sometimes hard to scroll? (too crowded?)
+- i don't like the flicker when we switch round, or shuffle;
+    like it renders a frame of new time on old round/shuffle
+- on device, exit should kill the app and card
+- oh! which state variables are saved btw sessions!?
+    - probably want: num cards, piles, speed, and animated states
+    - (so everything in the menu basically)
+
+- obviously, we still need to create tutorial screens
