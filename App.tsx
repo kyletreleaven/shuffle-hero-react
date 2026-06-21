@@ -1431,9 +1431,9 @@ function makeStyles(scale: number) {
     },
     toggleButton: {
       backgroundColor: 'rgba(80, 90, 160, 0.4)',
-      paddingHorizontal: s(16),
-      paddingVertical: s(8),
-      borderRadius: s(8),
+      paddingHorizontal: f(16),
+      paddingVertical: f(8),
+      borderRadius: f(8),
       borderWidth: 1,
       borderColor: 'rgba(100, 110, 180, 0.4)',
       alignItems: 'center',
@@ -1444,7 +1444,7 @@ function makeStyles(scale: number) {
     },
     toggleButtonText: {
       color: '#fff',
-      fontSize: s(13),
+      fontSize: f(12),
       fontWeight: '600',
     },
     bottomStackRow: {
@@ -1619,10 +1619,11 @@ function makeStyles(scale: number) {
     },
     menuPanel: {
       width: '60%',
-      maxWidth: 500,
+      maxWidth: 420,
       height: '80%',
+      maxHeight: 520,
       backgroundColor: 'rgba(15, 20, 50, 0.92)',
-      borderRadius: s(12),
+      borderRadius: f(12),
       borderWidth: 1,
       borderColor: 'rgba(100, 110, 180, 0.3)',
     },
@@ -1630,24 +1631,24 @@ function makeStyles(scale: number) {
       flex: 1,
     },
     menuScrollContent: {
-      padding: s(32),
+      padding: f(32),
       justifyContent: 'center',
       minHeight: '100%',
     },
     menuTitle: {
-      fontSize: f(20),
+      fontSize: f(16),
       fontWeight: 'bold',
-      marginBottom: s(32),
+      marginBottom: f(24),
       textAlign: 'center',
       color: '#fff',
     },
     settingControl: {
-      marginBottom: s(16),
+      marginBottom: f(16),
     },
     settingLabel: {
       fontSize: f(14),
       fontWeight: '600',
-      marginBottom: s(6),
+      marginBottom: f(6),
       color: '#fff',
     },
     settingButtons: {
@@ -1657,9 +1658,9 @@ function makeStyles(scale: number) {
     },
     settingButton: {
       backgroundColor: '#6875c4',
-      width: s(36),
-      height: s(36),
-      borderRadius: s(18),
+      width: f(30),
+      height: f(30),
+      borderRadius: f(15),
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -1669,20 +1670,20 @@ function makeStyles(scale: number) {
     },
     settingButtonText: {
       color: '#fff',
-      fontSize: s(20),
+      fontSize: f(14),
       fontWeight: 'bold',
     },
     settingValue: {
-      fontSize: f(16),
+      fontSize: f(14),
       fontWeight: '600',
       color: '#fff',
-      minWidth: s(40),
+      minWidth: f(32),
       textAlign: 'center',
     },
     homepageLink: {
       alignItems: 'center',
-      marginTop: s(16),
-      marginBottom: s(8),
+      marginTop: f(16),
+      marginBottom: f(8),
     },
     homepageLinkText: {
       color: '#8b9de8',
@@ -1701,14 +1702,14 @@ function makeStyles(scale: number) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: s(6),
-      marginTop: s(10),
+      gap: f(6),
+      marginTop: f(10),
     },
     presetButton: {
       flex: 1,
       backgroundColor: 'rgba(80, 90, 160, 0.4)',
-      paddingVertical: s(10),
-      borderRadius: s(8),
+      paddingVertical: f(10),
+      borderRadius: f(8),
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
@@ -1720,7 +1721,7 @@ function makeStyles(scale: number) {
     },
     presetButtonText: {
       color: '#fff',
-      fontSize: s(14),
+      fontSize: f(14),
       fontWeight: '600',
     },
     presetButtonTextSelected: {
@@ -1731,7 +1732,7 @@ function makeStyles(scale: number) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: s(6),
+      marginBottom: f(6),
     },
     sliderValue: {
       color: '#fff',
@@ -1740,13 +1741,13 @@ function makeStyles(scale: number) {
     },
     slider: {
       width: '100%',
-      height: s(48),
+      height: f(48),
     },
     sliderNotches: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingHorizontal: s(8),
-      marginTop: -s(8),
+      paddingHorizontal: f(8),
+      marginTop: -f(8),
     },
     sliderNotchText: {
       color: '#999',
