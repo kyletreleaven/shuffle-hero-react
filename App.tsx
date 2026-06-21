@@ -1061,7 +1061,7 @@ export default function App() {
               </View>
             ) : (() => {
                 const bandWidth = laneWidth - 2 * LANE_MARGIN;
-                const barWidth = Math.round(bandWidth * 0.6);
+                const barWidth = Math.min(Math.round(bandWidth * 0.6), 80);
                 const barHeight = Math.round(CARD_HEIGHT * 0.35);
                 const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
                 return (
