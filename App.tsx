@@ -620,6 +620,10 @@ export default function App() {
 
   // Game settings - initialize with defaults, will load saved values in effect
   const [numberOfLanes, setNumberOfLanes] = useState(LANE_COUNT);
+  const MIN_BAND_WIDTH = CARD_WIDTH + DECK_ROW_PADDING * 2;
+  const laneColumnWidth = windowDimensions.width / numberOfLanes;
+  const maxLaneMargin = Math.floor((laneColumnWidth - MIN_BAND_WIDTH) / 2);
+  const LANE_MARGIN = Math.max(1, Math.min(Math.round(12 * scale), maxLaneMargin));
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [showGoalDeck, setShowGoalDeck] = useState(false);
   const [faceUp, setFaceUp] = useState(true);
@@ -1086,7 +1090,10 @@ export default function App() {
                 key={index}
                 style={[
                   styles.lane,
-                  { backgroundColor: index % 2 === 0 ? 'rgba(10, 15, 40, 0.0)' : 'rgba(255, 255, 255, 0.04)' }
+                  {
+                    backgroundColor: index % 2 === 0 ? 'rgba(0, 0, 0, 0.55)' : 'rgba(65, 65, 65, 0.35)',
+                    marginHorizontal: LANE_MARGIN,
+                  }
                 ]}
               />
             ))}
@@ -1352,7 +1359,7 @@ function makeStyles(scale: number) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#0d1020',
+      backgroundColor: '#2a2a3a',
     },
     backgroundImage: {
       position: 'absolute',
@@ -1360,7 +1367,7 @@ function makeStyles(scale: number) {
       left: 0,
       right: 0,
       bottom: 0,
-      opacity: 0.45,
+      opacity: 0.65,
     },
     trackPanelFull: {
       flex: 1,
@@ -1483,16 +1490,11 @@ function makeStyles(scale: number) {
       alignItems: 'center',
     },
     track: {
-      backgroundColor: 'rgba(15, 20, 50, 0.55)',
+      backgroundColor: 'transparent',
       flexDirection: 'row',
-      borderLeftWidth: 1,
-      borderRightWidth: 1,
-      borderColor: 'rgba(100, 110, 180, 0.25)',
     },
     lane: {
       flex: 1,
-      borderRightWidth: 1,
-      borderColor: 'rgba(100, 110, 180, 0.2)',
     },
     ghostNote: {
       position: 'absolute',
