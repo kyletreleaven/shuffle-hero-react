@@ -1727,7 +1727,7 @@ function makeStyles(scale: number) {
       zIndex: 250,
     },
     roundStatusText: {
-      color: 'rgba(255, 255, 255, 0.7)',
+      color: '#e8ff00',
       fontSize: f(16),
       fontWeight: '800',
       textTransform: 'uppercase',
