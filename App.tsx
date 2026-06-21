@@ -51,6 +51,19 @@ type MenuPanelProps = {
   setNumberOfLanes: (value: number) => void;
   scrollSpeed: number;
   setScrollSpeed: (value: number) => void;
+  devMode: boolean;
+  setDevMode: (value: boolean) => void;
+};
+
+type AdvancedPanelProps = {
+  visible: boolean;
+  onClose: () => void;
+  showGoalDeck: boolean;
+  setShowGoalDeck: (value: boolean) => void;
+  faceUp: boolean;
+  setFaceUp: (value: boolean) => void;
+  onReverse: () => void;
+  inhibitAutoScroll: boolean;
 };
 
 type NumberOfCardsControlProps = {
@@ -457,7 +470,7 @@ function AutoScrollView({
   );
 }
 
-function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed }: MenuPanelProps) {
+function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOfLanes, setNumberOfLanes, scrollSpeed, setScrollSpeed, devMode, setDevMode }: MenuPanelProps) {
   const { width, height } = useWindowDimensions();
   const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
   return (
@@ -491,6 +504,15 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               onChange={setScrollSpeed}
             />
 
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.toggleButton, devMode && styles.toggleButtonActive]}
+                onPress={() => setDevMode(!devMode)}
+              >
+                <Text style={styles.toggleButtonText}>Advanced mode</Text>
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
               onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
               style={styles.homepageLink}
@@ -503,6 +525,65 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               onPress={onClose}
             >
               <Text style={styles.buttonText}>Close Menu</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function AdvancedPanel({ visible, onClose, showGoalDeck, setShowGoalDeck, faceUp, setFaceUp, onReverse, inhibitAutoScroll }: AdvancedPanelProps) {
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(Math.min(width, height) / BASE_SCREEN_WIDTH), [width, height]);
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.menuPanel}>
+          <ScrollView
+            style={styles.menuScrollView}
+            contentContainerStyle={styles.menuScrollContent}
+          >
+            <Text style={styles.menuTitle}>Advanced</Text>
+
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.toggleButton, showGoalDeck && styles.toggleButtonActive]}
+                onPress={() => setShowGoalDeck(!showGoalDeck)}
+              >
+                <Text style={styles.toggleButtonText}>Goal deck</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.toggleButton, faceUp && styles.toggleButtonActive]}
+                onPress={() => setFaceUp(!faceUp)}
+              >
+                <Text style={styles.toggleButtonText}>Face up</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingControl}>
+              <TouchableOpacity
+                style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+                onPress={onReverse}
+                disabled={inhibitAutoScroll}
+              >
+                <Text style={styles.buttonText}>Reverse</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+            >
+              <Text style={styles.buttonText}>Close</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -544,6 +625,8 @@ export default function App() {
   const [scrollSpeed, setScrollSpeed] = useState(SCROLL_SPEED);
   const [showGoalDeck, setShowGoalDeck] = useState(false);
   const [faceUp, setFaceUp] = useState(true);
+  const [devMode, setDevMode] = useState(true);
+  const [devPanelVisible, setDevPanelVisible] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
   const topDeckHeight = showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE;
@@ -664,6 +747,7 @@ export default function App() {
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
           if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
           if (prefs.faceUp !== undefined) setFaceUp(prefs.faceUp);
+          if (prefs.devMode !== undefined) setDevMode(prefs.devMode);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
           }
@@ -686,6 +770,7 @@ export default function App() {
           scrollSpeed,
           showGoalDeck,
           faceUp,
+          devMode,
         };
         const prefsString = JSON.stringify(prefs);
 
@@ -700,7 +785,7 @@ export default function App() {
     };
 
     savePreferences();
-  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck, faceUp]);
+  }, [numberOfCards, numberOfLanes, scrollSpeed, showGoalDeck, faceUp, devMode]);
 
   const handleScrollYChange = setScrollY;
 
@@ -1164,44 +1249,11 @@ export default function App() {
             <Text style={styles.buttonText}>Menu</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomButton, showGoalDeck && styles.bottomButtonActive]}
-            onPress={() => setShowGoalDeck(!showGoalDeck)}
-          >
-            <Text style={styles.buttonText}>Goal</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, faceUp && styles.bottomButtonActive]}
-            onPress={() => setFaceUp(!faceUp)}
-          >
-            <Text style={styles.buttonText}>Faces</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={() => reShuffle()}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Shuffle</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={reverse}
-            disabled={inhibitAutoScroll}
-          >
-            <Text style={styles.buttonText}>Reverse</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={() => setIsPaused(!isPaused)}
-            disabled={inhibitAutoScroll}
-          >
-            <Text style={styles.buttonText}>{isPaused ? 'Resume' : 'Pause'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-            onPress={resetScrollY}
-            disabled={inhibitAutoScroll}
-          >
-            <Text style={styles.buttonText}>Restart</Text>
           </TouchableOpacity>
           <View style={styles.navigationButtons}>
             <TouchableOpacity
@@ -1231,7 +1283,29 @@ export default function App() {
               <Text style={styles.buttonText}>Next</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={resetScrollY}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Restart</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => setIsPaused(!isPaused)}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>{isPaused ? 'Resume' : 'Pause'}</Text>
+          </TouchableOpacity>
         </View>
+        {devMode && (
+          <TouchableOpacity
+            style={styles.bottomButton}
+            onPress={() => setDevPanelVisible(true)}
+          >
+            <Text style={styles.buttonText}>Dev</Text>
+          </TouchableOpacity>
+        )}
         {Platform.OS !== 'web' && (
           <TouchableOpacity
             style={styles.bottomButton}
@@ -1254,6 +1328,19 @@ export default function App() {
         }}
         scrollSpeed={scrollSpeed}
         setScrollSpeed={setScrollSpeed}
+        devMode={devMode}
+        setDevMode={setDevMode}
+      />
+
+      <AdvancedPanel
+        visible={devPanelVisible}
+        onClose={() => setDevPanelVisible(false)}
+        showGoalDeck={showGoalDeck}
+        setShowGoalDeck={setShowGoalDeck}
+        faceUp={faceUp}
+        setFaceUp={setFaceUp}
+        onReverse={reverse}
+        inhibitAutoScroll={inhibitAutoScroll}
       />
 
       <StatusBar style="auto" />
