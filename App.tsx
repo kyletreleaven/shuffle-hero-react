@@ -479,7 +479,8 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.menuPanel}>
+        <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
+        <TouchableOpacity style={styles.menuPanel} activeOpacity={1} onPress={() => {}}>
           <ScrollView
             style={styles.menuScrollView}
             contentContainerStyle={styles.menuScrollContent}
@@ -518,14 +519,8 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-            >
-              <Text style={styles.buttonText}>Close Menu</Text>
-            </TouchableOpacity>
           </ScrollView>
-        </View>
+        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -542,7 +537,8 @@ function AdvancedPanel({ visible, onClose, showGoalDeck, setShowGoalDeck, faceUp
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.menuPanel}>
+        <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
+        <TouchableOpacity style={styles.menuPanel} activeOpacity={1} onPress={() => {}}>
           <ScrollView
             style={styles.menuScrollView}
             contentContainerStyle={styles.menuScrollContent}
@@ -577,14 +573,8 @@ function AdvancedPanel({ visible, onClose, showGoalDeck, setShowGoalDeck, faceUp
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-            >
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
           </ScrollView>
-        </View>
+        </TouchableOpacity>
       </View>
     </Modal>
   );
@@ -1592,7 +1582,7 @@ function makeStyles(scale: number) {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: Math.max(s(10), 14),
+      paddingVertical: Math.max(s(10), 18),
       paddingHorizontal: s(4),
       backgroundColor: '#6875c4',
       borderRightWidth: StyleSheet.hairlineWidth,
@@ -1618,7 +1608,11 @@ function makeStyles(scale: number) {
       textAlign: 'center',
     },
     overlay: {
-      flex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
       justifyContent: 'center',
       alignItems: 'center',
