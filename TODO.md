@@ -61,20 +61,92 @@
 **Targets:** phone (small screen, high density), Android emulator (large resolution), web (variable viewport width).
 
 
-# Test notes
+---
 
-- can we hide the window handle at the bottom used for swiping
-- stacking should not be a valid round state when not animated
-- when changing the number of piles, the current round can become too large
-- round header also in the yellow font used elsewhere
-- cap the bar width so it's never too big
-- make the +/-1 and +/-5 buttons bigger; also the # cards font
-- why is menu sometimes hard to scroll? (too crowded?)
-- i don't like the flicker when we switch round, or shuffle;
-    like it renders a frame of new time on old round/shuffle
-- on device, exit should kill the app and card
-- oh! which state variables are saved btw sessions!?
-    - probably want: num cards, piles, speed, and animated states
-    - (so everything in the menu basically)
+## Pre-release fixes (from device testing)
 
-- obviously, we still need to create tutorial screens
+These are bugs and polish items found on a real phone. Address before release.
+
+### P1 – Session persistence
+
+**Problem:** It's unclear which settings survive an app restart. On every launch the user has to re-enter their number of cards, piles, speed, and animation preference.
+
+**Desired:** All menu settings persist between sessions: number of cards, number of piles, scroll speed, and the three checkboxes (Animated, Show card values, Show goal deck). Audit what `AsyncStorage` currently saves and fill the gaps.
+
+---
+
+### P1 – Round clamping when piles change
+
+**Problem:** If the user is on round 3 of a 3-pile shuffle and then reduces to 2 piles, the number of rounds drops and `currentRound` can exceed the new maximum, causing an invalid state.
+
+**Fix:** When `numberOfLanes` or `numberOfCards` changes, reset `currentRound` to 0 and reset scroll position — the whole shuffle execution changes so there's no meaningful round to resume.
+
+---
+
+### P1 – Flicker on round/shuffle transition
+
+**Problem:** When switching rounds or reshuffling, the scroll position resets but the old permutation/round data renders for one frame first, causing a visible flash.
+
+**Fix:** Ensure the new permutation/round and the scroll reset are applied atomically before the next render — either batch into a single `setState` call or suppress rendering for one frame during the transition.
+
+---
+
+### P2 – "Stacking" status invalid in non-animated mode
+
+**Problem:** The round status header can display "Stacking" even when `animated` is off, which has no meaning without the card animation.
+
+**Fix:** When `animated` is false, omit the Stacking state from the status label — treat it the same as Finished for display purposes.
+
+---
+
+### P2 – Round status header color
+
+**Problem:** The round header uses a different color than the yellow accent used elsewhere in the status row.
+
+**Fix:** Apply the same highlight yellow (`#e8ff00` or the `remainingValue` style color) to the round status text to make it consistent.
+
+---
+
+### P2 – Cap bar width on wide screens
+
+**Problem:** In non-animated mode, bar notes are sized as a percentage of lane width, so on a wide viewport or with few lanes they can become uncomfortably wide.
+
+**Fix:** Add an absolute pixel cap (e.g. `Math.min(barWidth, 80)`) so bars never exceed a reasonable maximum width regardless of lane count or screen size.
+
+---
+
+### P2 – Menu stepper buttons too small on device
+
+**Problem:** The +/-1 and +/-5 increment buttons in the menu are difficult to tap accurately on a phone. The number-of-cards display font is also too small to read at a glance.
+
+**Fix:** Increase the minimum touch target size for stepper buttons (min 44px height), and increase the displayed value font size so it's readable without squinting.
+
+---
+
+### P2 – Menu scroll unreliable on device
+
+**Problem:** The menu `ScrollView` is sometimes hard to scroll — touch gestures are intercepted by the dismiss-overlay `TouchableOpacity` underneath.
+
+**Fix:** Investigate whether the overlay's touch handler is swallowing scroll gestures. May need `pointerEvents` or a `ScrollView` touch propagation fix.
+
+---
+
+### P3 – Hide Android gesture navigation handle
+
+**Problem:** The system gesture handle bar is visible at the bottom of the screen and overlaps the button bar, wasting space and looking unpolished.
+
+**Fix:** Enable edge-to-edge mode in the Expo/Android config (`android.navigationBarTranslucent` or `expo-navigation-bar`) and apply appropriate bottom insets so the button bar sits above the gesture zone.
+
+---
+
+### P3 – Exit button should kill the app
+
+**Problem:** On device, the Exit button (`BackHandler.exitApp()`) may not fully terminate the app — it can remain in the Android recents tray.
+
+**Fix:** Verify `BackHandler.exitApp()` actually kills the process on the Pixel target. If not, use `RNExitApp` or an equivalent that calls `System.exit(0)` on Android.
+
+---
+
+### Aspirational – Tutorial screens
+
+See item 2 above. Not a blocker for initial release but needed shortly after.
