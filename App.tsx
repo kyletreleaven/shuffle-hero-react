@@ -1,6 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1066,6 +1066,11 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require('./assets/wizard-cards.png')}
+        style={[styles.backgroundImage, { width: windowDimensions.width, height: windowDimensions.height }]}
+        resizeMode="cover"
+      />
       {/* Main track area - full height scrollable */}
       <View style={styles.trackPanelFull}>
         <AutoScrollView
@@ -1084,7 +1089,7 @@ export default function App() {
                 key={index}
                 style={[
                   styles.lane,
-                  { backgroundColor: index % 2 === 0 ? '#1a1a1a' : '#2a2a2a' }
+                  { backgroundColor: index % 2 === 0 ? 'rgba(10, 15, 40, 0.0)' : 'rgba(255, 255, 255, 0.04)' }
                 ]}
               />
             ))}
@@ -1241,66 +1246,62 @@ export default function App() {
 
       {/* Bottom button row */}
       <View style={styles.bottomButtonRow}>
-        <View style={styles.centeredButtons}>
           <TouchableOpacity
-            style={styles.bottomButton}
+            style={styles.bottomBarButton}
             onPress={() => setMenuVisible(true)}
           >
             <Text style={styles.buttonText}>Menu</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={() => reShuffle()}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Shuffle</Text>
           </TouchableOpacity>
-          <View style={styles.navigationButtons}>
-            <TouchableOpacity
-              style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-              onPress={() => {
-                const newRound = Math.max(0, currentRound - 1);
-                if (newRound !== currentRound) {
-                  setCurrentRound(newRound);
-                  resetScrollY();
-                }
-              }}
-              disabled={inhibitAutoScroll}
-            >
-              <Text style={styles.buttonText}>Prev</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
-              onPress={() => {
-                const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
-                if (newRound !== currentRound) {
-                  setCurrentRound(newRound);
-                  resetScrollY();
-                }
-              }}
-              disabled={inhibitAutoScroll}
-            >
-              <Text style={styles.buttonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
           <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => {
+              const newRound = Math.max(0, currentRound - 1);
+              if (newRound !== currentRound) {
+                setCurrentRound(newRound);
+                resetScrollY();
+              }
+            }}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Prev</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            onPress={() => {
+              const newRound = Math.min(Math.max(0, numberOfRounds - 1), currentRound + 1);
+              if (newRound !== currentRound) {
+                setCurrentRound(newRound);
+                resetScrollY();
+              }
+            }}
+            disabled={inhibitAutoScroll}
+          >
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={resetScrollY}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>Restart</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.bottomButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
+            style={[styles.bottomBarButton, inhibitAutoScroll && styles.bottomButtonDisabled]}
             onPress={() => setIsPaused(!isPaused)}
             disabled={inhibitAutoScroll}
           >
             <Text style={styles.buttonText}>{isPaused ? 'Resume' : 'Pause'}</Text>
           </TouchableOpacity>
-        </View>
         {devMode && (
           <TouchableOpacity
-            style={styles.bottomButton}
+            style={styles.bottomBarButton}
             onPress={() => setDevPanelVisible(true)}
           >
             <Text style={styles.buttonText}>Dev</Text>
@@ -1308,7 +1309,7 @@ export default function App() {
         )}
         {Platform.OS !== 'web' && (
           <TouchableOpacity
-            style={styles.bottomButton}
+            style={styles.bottomBarButton}
             onPress={() => BackHandler.exitApp()}
           >
             <Text style={styles.buttonText}>Exit</Text>
@@ -1354,7 +1355,15 @@ function makeStyles(scale: number) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#0d1020',
+    },
+    backgroundImage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0.45,
     },
     trackPanelFull: {
       flex: 1,
@@ -1366,9 +1375,9 @@ function makeStyles(scale: number) {
       left: 0,
       right: 0,
       // height is set dynamically based on showGoalDeck
-      backgroundColor: 'rgba(10, 10, 10, 0.9)',
-      borderBottomWidth: 2,
-      borderBottomColor: '#333',
+      backgroundColor: 'rgba(15, 20, 45, 0.85)',
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(100, 110, 180, 0.3)',
       justifyContent: 'flex-end',
       alignItems: 'flex-start',
       zIndex: 100,
@@ -1392,17 +1401,17 @@ function makeStyles(scale: number) {
       paddingRight: s(10),
     },
     toggleButton: {
-      backgroundColor: '#333',
+      backgroundColor: 'rgba(80, 90, 160, 0.4)',
       paddingHorizontal: s(16),
       paddingVertical: s(8),
       borderRadius: s(8),
-      borderWidth: 2,
-      borderColor: '#555',
+      borderWidth: 1,
+      borderColor: 'rgba(100, 110, 180, 0.4)',
       alignItems: 'center',
     },
     toggleButtonActive: {
-      backgroundColor: '#007AFF',
-      borderColor: '#007AFF',
+      backgroundColor: '#6875c4',
+      borderColor: '#8b9de8',
     },
     toggleButtonText: {
       color: '#fff',
@@ -1414,9 +1423,9 @@ function makeStyles(scale: number) {
       bottom: s(70), // Above the bottom button row
       left: 0,
       right: 0,
-      backgroundColor: 'rgba(10, 10, 10, 0.9)',
-      borderTopWidth: 2,
-      borderTopColor: '#333',
+      backgroundColor: 'rgba(15, 20, 50, 0.85)',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(100, 110, 180, 0.3)',
       zIndex: 100,
     },
     pileLabelContainer: {
@@ -1477,16 +1486,16 @@ function makeStyles(scale: number) {
       alignItems: 'center',
     },
     track: {
-      backgroundColor: '#2a2a2a',
+      backgroundColor: 'rgba(15, 20, 50, 0.55)',
       flexDirection: 'row',
-      borderLeftWidth: 2,
-      borderRightWidth: 2,
-      borderColor: '#4a4a4a',
+      borderLeftWidth: 1,
+      borderRightWidth: 1,
+      borderColor: 'rgba(100, 110, 180, 0.25)',
     },
     lane: {
       flex: 1,
       borderRightWidth: 1,
-      borderColor: '#4a4a4a',
+      borderColor: 'rgba(100, 110, 180, 0.2)',
     },
     ghostNote: {
       position: 'absolute',
@@ -1520,39 +1529,40 @@ function makeStyles(scale: number) {
     },
     bottomButtonRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: s(10),
-      backgroundColor: '#1a1a1a',
-      borderTopWidth: 2,
-      borderTopColor: '#4a4a4a',
+      alignItems: 'stretch',
+      backgroundColor: 'rgba(15, 20, 50, 0.92)',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(100, 110, 180, 0.3)',
       zIndex: 200, // Above cardOverlay (150) - card zIndex values are confined within overlay's stacking context
     },
     centeredButtons: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      alignItems: 'center',
+      alignItems: 'stretch',
       flex: 1,
-      gap: s(8),
     },
     navigationButtons: {
+      flex: 2,
       flexDirection: 'row',
-      gap: s(8),
+      alignItems: 'stretch',
+    },
+    bottomBarButton: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: s(10),
+      paddingHorizontal: s(4),
+      backgroundColor: '#6875c4',
+      borderRightWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255, 255, 255, 0.15)',
     },
     bottomButton: {
-      backgroundColor: '#007AFF',
+      backgroundColor: '#6875c4',
       paddingHorizontal: s(16),
       paddingVertical: s(8),
       borderRadius: s(8),
-      elevation: 3,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
     },
     bottomButtonDisabled: {
-      backgroundColor: '#555',
+      backgroundColor: '#3a3f60',
       opacity: 0.5,
     },
     bottomButtonActive: {
@@ -1573,8 +1583,10 @@ function makeStyles(scale: number) {
       width: '60%',
       maxWidth: 500,
       height: '80%',
-      backgroundColor: '#1a1a1a',
+      backgroundColor: 'rgba(15, 20, 50, 0.92)',
       borderRadius: s(12),
+      borderWidth: 1,
+      borderColor: 'rgba(100, 110, 180, 0.3)',
     },
     menuScrollView: {
       flex: 1,
@@ -1606,7 +1618,7 @@ function makeStyles(scale: number) {
       justifyContent: 'space-between',
     },
     settingButton: {
-      backgroundColor: '#007AFF',
+      backgroundColor: '#6875c4',
       width: s(36),
       height: s(36),
       borderRadius: s(18),
@@ -1614,7 +1626,8 @@ function makeStyles(scale: number) {
       alignItems: 'center',
     },
     settingButtonDisabled: {
-      backgroundColor: '#ccc',
+      backgroundColor: '#3a3f60',
+      opacity: 0.5,
     },
     settingButtonText: {
       color: '#fff',
@@ -1634,7 +1647,7 @@ function makeStyles(scale: number) {
       marginBottom: s(8),
     },
     homepageLinkText: {
-      color: '#007AFF',
+      color: '#8b9de8',
       fontSize: f(14),
       textDecorationLine: 'underline',
     },
@@ -1655,17 +1668,17 @@ function makeStyles(scale: number) {
     },
     presetButton: {
       flex: 1,
-      backgroundColor: '#333',
+      backgroundColor: 'rgba(80, 90, 160, 0.4)',
       paddingVertical: s(10),
       borderRadius: s(8),
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 2,
-      borderColor: '#555',
+      borderWidth: 1,
+      borderColor: 'rgba(100, 110, 180, 0.4)',
     },
     presetButtonSelected: {
-      backgroundColor: '#007AFF',
-      borderColor: '#007AFF',
+      backgroundColor: '#6875c4',
+      borderColor: '#8b9de8',
     },
     presetButtonText: {
       color: '#fff',
