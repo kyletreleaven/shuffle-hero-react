@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -631,7 +631,9 @@ export default function App() {
   const [devPanelVisible, setDevPanelVisible] = useState(false);
 
   // Dynamic top deck height based on whether goal deck is shown
-  const topDeckHeight = showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE;
+  const topDeckHeight = devMode
+    ? (showGoalDeck ? TOP_DECK_HEIGHT_DOUBLE : TOP_DECK_HEIGHT_SINGLE)
+    : 0;
 
   type ShuffleState = {
     permutation: number[];
@@ -1098,8 +1100,8 @@ export default function App() {
               />
             ))}
 
-            {/* Render ghost notes (dashed outlines) */}
-            {notes.map((note) => (
+            {/* Render notes: bars in normal mode, dashed card outlines in dev mode */}
+            {notes.map((note) => devMode ? (
               <View
                 key={note.id}
                 style={[
@@ -1115,80 +1117,113 @@ export default function App() {
               >
                 <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
               </View>
-            ))}
+            ) : (() => {
+                const bandWidth = laneWidth - 2 * LANE_MARGIN;
+                const barWidth = Math.round(bandWidth * 0.6);
+                const barHeight = Math.round(CARD_HEIGHT * 0.35);
+                const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
+                return (
+                  <React.Fragment key={note.id}>
+                    <View
+                      style={[styles.barNote, {
+                        width: barWidth,
+                        height: barHeight,
+                        backgroundColor: note.color,
+                        left: barLeft,
+                        top: note.position,
+                      }]}
+                    />
+                    <Text style={[styles.barNoteNumber, { left: barLeft + barWidth, top: note.position + barHeight }]}>
+                      {note.id + 1}
+                    </Text>
+                  </React.Fragment>
+                );
+              })()
+            )}
 
             {/* Cards are rendered in the unified overlay, not here */}
           </View>
         </AutoScrollView>
+
+        {/* Pile labels in normal mode: float at bottom of track, above button bar */}
+        {!devMode && (
+          <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row' }}>
+            {Array.from({ length: numberOfLanes }, (_, i) => (
+              <View key={i} style={{ flex: 1, alignItems: 'center', paddingBottom: Math.round(4 * scale) }}>
+                <Text style={styles.pileLabel}>Pile {i + 1}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* Top deck row - fixed position overlay with labels */}
-      <View style={[styles.topDeckRow, { height: topDeckHeight }]}>
-        {/* Left margin labels - positioned right up against the deck */}
-        <View style={[styles.deckLabelsLeft, { width: (deckXPositions[0] ?? 0) - 8 }]}>
-          {showGoalDeck && (
-            <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING, height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Goal Deck</Text>
-          )}
-          <Text style={[styles.deckLabel, { height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Current Deck</Text>
+      {/* Top deck row - dev mode only */}
+      {devMode && (
+        <View style={[styles.topDeckRow, { height: topDeckHeight }]}>
+          <View style={[styles.deckLabelsLeft, { width: (deckXPositions[0] ?? 0) - 8 }]}>
+            {showGoalDeck && (
+              <Text style={[styles.deckLabel, { marginBottom: DECK_ROW_PADDING, height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Goal Deck</Text>
+            )}
+            <Text style={[styles.deckLabel, { height: CARD_HEIGHT, lineHeight: CARD_HEIGHT }]}>Current Deck</Text>
+          </View>
         </View>
-      </View>
+      )}
 
-      {/* Bottom stack row with pile labels */}
-      <View style={[styles.bottomStackRow, { height: BOTTOM_STACK_HEIGHT }]}>
-        {Array.from({ length: numberOfLanes }).map((_, i) => (
-          <View
-            key={`pile-label-${i}`}
-            style={[
-              styles.pileLabelContainer,
-              { left: i * laneWidth, width: laneWidth }
-            ]}
-          >
-            <Text style={styles.pileLabel}>Pile {i + 1}</Text>
-          </View>
-        ))}
-      </View>
+      {/* Bottom stack row with pile labels - dev mode only */}
+      {devMode && (
+        <View style={[styles.bottomStackRow, { height: BOTTOM_STACK_HEIGHT }]}>
+          {Array.from({ length: numberOfLanes }).map((_, i) => (
+            <View
+              key={`pile-label-${i}`}
+              style={[styles.pileLabelContainer, { left: i * laneWidth, width: laneWidth }]}
+            >
+              <Text style={styles.pileLabel}>Pile {i + 1}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
-      {/* Unified card overlay - all cards rendered with direct positioning */}
-      <View style={styles.cardOverlay} pointerEvents="none">
-        {/* Source/dealing cards */}
-        {cardScreenPositions.map(({ faceValue, x, y, zIndex, color }) => (
-          <View
-            key={faceValue}
-            style={[
-              styles.deckCard,
-              {
-                width: CARD_WIDTH,
-                height: CARD_HEIGHT,
-                backgroundColor: color,
-                left: x,
-                top: y,
-                zIndex,
-              },
-            ]}
-          >
-            {faceUp && <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>}
-          </View>
-        ))}
-        {/* Goal deck (in row above source deck) - shows target permutation */}
-        {showGoalDeck && permutation.map((faceValue, displayIndex) => (
-          <View
-            key={`goal-${displayIndex}`}
-            style={[
-              styles.deckCard,
-              styles.goalDeckCard,
-              {
-                width: CARD_WIDTH,
-                height: CARD_HEIGHT,
-                left: deckXPositions[displayIndex],
-                top: goalDeckY,
-                zIndex: numberOfCards - displayIndex, // Earlier cards on top, below source deck
-              },
-            ]}
-          >
-            <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
-          </View>
-        ))}
-      </View>
+      {/* Unified card overlay - dev mode only */}
+      {devMode && (
+        <View style={styles.cardOverlay} pointerEvents="none">
+          {cardScreenPositions.map(({ faceValue, x, y, zIndex, color }) => (
+            <View
+              key={faceValue}
+              style={[
+                styles.deckCard,
+                {
+                  width: CARD_WIDTH,
+                  height: CARD_HEIGHT,
+                  backgroundColor: color,
+                  left: x,
+                  top: y,
+                  zIndex,
+                },
+              ]}
+            >
+              {faceUp && <Text style={styles.deckCardNumber}>{permutation[faceValue] + 1}</Text>}
+            </View>
+          ))}
+          {showGoalDeck && permutation.map((faceValue, displayIndex) => (
+            <View
+              key={`goal-${displayIndex}`}
+              style={[
+                styles.deckCard,
+                styles.goalDeckCard,
+                {
+                  width: CARD_WIDTH,
+                  height: CARD_HEIGHT,
+                  left: deckXPositions[displayIndex],
+                  top: goalDeckY,
+                  zIndex: numberOfCards - displayIndex,
+                },
+              ]}
+            >
+              <Text style={styles.deckCardNumber}>{faceValue + 1}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Round status - centered on track */}
       <View style={[styles.roundStatusDisplay, { top: topDeckHeight + 10 }]}>
@@ -1509,6 +1544,15 @@ function makeStyles(scale: number) {
       fontSize: f(18),
       fontWeight: 'bold',
       opacity: 0.7,
+    },
+    barNote: {
+      position: 'absolute',
+    },
+    barNoteNumber: {
+      position: 'absolute',
+      fontSize: Math.min(s(13), 18),
+      fontWeight: 'bold',
+      color: '#e8ff00',
     },
     debugHUD: {
       position: 'absolute',
