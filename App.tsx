@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Pressable, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -474,12 +474,13 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
     >
       <View style={styles.overlay}>
         <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
-        <TouchableOpacity style={styles.menuPanel} activeOpacity={1} onPress={() => {}}>
+        <Pressable style={styles.menuPanel}>
           <ScrollView
             style={styles.menuScrollView}
-            contentContainerStyle={styles.menuScrollContent}
             showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
           >
+            <View style={styles.menuScrollContent} onStartShouldSetResponder={() => true}>
             <Text style={styles.menuTitle}>Options Menu</Text>
 
             <NumberOfCardsControl
@@ -501,7 +502,7 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
                 {animated && <Text style={styles.checkmark}>✓</Text>}
               </View>
-              <Text style={styles.checkboxLabel}>Animated</Text>
+              <Text style={styles.checkboxLabel}>Show shuffle</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
@@ -525,8 +526,9 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
               <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
             </TouchableOpacity>
 
+            </View>
           </ScrollView>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </Modal>
   );
@@ -694,7 +696,7 @@ export default function App() {
           if (prefs.scrollSpeed) setScrollSpeed(prefs.scrollSpeed);
           if (prefs.showGoalDeck !== undefined) setShowGoalDeck(prefs.showGoalDeck);
           if (prefs.showCardValues !== undefined) setFaceUp(prefs.showCardValues);
-          if (prefs.animated !== undefined) setAnimated(prefs.animated);
+          if (prefs.showShuffle !== undefined) setAnimated(prefs.showShuffle);
           if (prefs.numberOfCards && prefs.numberOfCards !== numberOfCards) {
             reShuffle(prefs.numberOfCards);
           }
@@ -717,7 +719,7 @@ export default function App() {
           scrollSpeed,
           showGoalDeck,
           showCardValues: faceUp,
-          animated,
+          showShuffle: animated,
         };
         const prefsString = JSON.stringify(prefs);
 
@@ -1591,8 +1593,8 @@ function makeStyles(scale: number) {
       alignItems: 'center',
     },
     menuPanel: {
-      width: '60%',
-      maxWidth: 420,
+      width: '75%',
+      maxWidth: 520,
       height: '80%',
       maxHeight: 520,
       backgroundColor: 'rgba(15, 20, 50, 0.92)',
@@ -1604,7 +1606,8 @@ function makeStyles(scale: number) {
       flex: 1,
     },
     menuScrollContent: {
-      padding: f(32),
+      paddingVertical: f(32),
+      paddingHorizontal: f(64),
       justifyContent: 'center',
       minHeight: '100%',
     },
