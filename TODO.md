@@ -6,31 +6,17 @@
 
 **Problem:** The app currently shows both ghost-note bars and animated cards simultaneously, which is visually busy and confusing for new users. The card animations are an illustration tool, not a gameplay element, and should not be on by default.
 
-**Current state:**
-- Ghost notes (bars): dashed outline rectangles on the scroll track, labelled with sequence number (`note.id + 1`), always visible — App.tsx:984-999
-- Animated cards: solid colored rectangles that deal/fall/stack/collect, showing card values (`permutation[faceValue] + 1`) — App.tsx:1035-1050
-- Both render simultaneously with no toggle
-
-**Desired default:**
-- Bars only (ghost notes visible, everything else suppressed)
-- Bars labelled with sequence number
-- Note shape: Guitar Hero-style bars (current dashed rectangles)
-
-**Features hidden behind dev mode** (off by default):
-- Animated cards (deal/fall/stack/collect)
-- Current deck row
-- Goal deck row
-- Animated piles
-- Reverse button
-
-**Dev section in menu** (collapsed or at the bottom):
-- **Note shape:** bars (default) / circles / cards
-  - Circles are not yet implemented — need a new render branch in the ghost note section
-- **Animations:** toggle the full card animation system on/off (animated cards, decks, piles)
-- **Label:** sequence number (default) vs. card value on bars
-- **Reverse:** expose the reverse button when enabled
-
-**Also:** Background image behind the scroll track with adjustable transparency, so an image shows through the lanes (like the fretboard inlays in Guitar Hero). Image source and opacity should be configurable, probably also in the dev section.
+- [x] **Bars only by default** — ghost notes visible, animated cards/decks/piles suppressed unless enabled
+- [x] **Bars labelled with sequence number** by default
+- [x] **Animated cards hidden behind toggle** — deal/fall/stack/collect off by default
+- [x] **Current deck row hidden behind toggle**
+- [x] **Goal deck row hidden behind toggle**
+- [x] **Animated piles hidden behind toggle**
+- [x] **Reverse** — implemented as long-press on the shuffle button
+- [x] **Dev/animation section in menu**
+- [x] **Background image** — image behind the scroll track with adjustable transparency (Guitar Hero fretboard style); image source and opacity configurable in dev section
+- [ ] **Note shape selector** — bars (default) / circles / cards (circles not yet implemented)
+- [ ] **Label selector** — sequence number (default) vs. card value on bars
 
 ---
 
