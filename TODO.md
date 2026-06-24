@@ -63,104 +63,18 @@
 
 ---
 
-## Pre-release fixes (from device testing)
+## Pre-release checklist (from device testing)
 
-These are bugs and polish items found on a real phone. Address before release.
-
-### P1 – Session persistence
-
-**Problem:** It's unclear which settings survive an app restart. On every launch the user has to re-enter their number of cards, piles, speed, and animation preference.
-
-**Desired:** All menu settings persist between sessions: number of cards, number of piles, scroll speed, and the three checkboxes (Animated, Show card values, Show goal deck). Audit what `AsyncStorage` currently saves and fill the gaps.
-
----
-
-### P1 – Round clamping when piles change
-
-**Problem:** If the user is on round 3 of a 3-pile shuffle and then reduces to 2 piles, the number of rounds drops and `currentRound` can exceed the new maximum, causing an invalid state.
-
-**Fix:** When `numberOfLanes` or `numberOfCards` changes, reset `currentRound` to 0 and reset scroll position — the whole shuffle execution changes so there's no meaningful round to resume.
-
----
-
-### P1 – Flicker on round/shuffle transition
-
-**Problem:** When switching rounds or reshuffling, the scroll position resets but the old permutation/round data renders for one frame first, causing a visible flash.
-
-**Fix:** Ensure the new permutation/round and the scroll reset are applied atomically before the next render — either batch into a single `setState` call or suppress rendering for one frame during the transition.
-
----
-
-### P2 – "Stacking" status invalid in non-animated mode
-
-**Problem:** The round status header can display "Stacking" even when `animated` is off, which has no meaning without the card animation.
-
-**Fix:** When `animated` is false, omit the Stacking state from the status label — treat it the same as Finished for display purposes.
-
----
-
-### P2 – Round status header color
-
-**Problem:** The round header uses a different color than the yellow accent used elsewhere in the status row.
-
-**Fix:** Apply the same highlight yellow (`#e8ff00` or the `remainingValue` style color) to the round status text to make it consistent.
-
----
-
-### P2 – Cap bar width on wide screens
-
-**Problem:** In non-animated mode, bar notes are sized as a percentage of lane width, so on a wide viewport or with few lanes they can become uncomfortably wide.
-
-**Fix:** Add an absolute pixel cap (e.g. `Math.min(barWidth, 80)`) so bars never exceed a reasonable maximum width regardless of lane count or screen size.
-
----
-
-### P2 – Menu stepper buttons too small on device
-
-**Problem:** The +/-1 and +/-5 increment buttons in the menu are difficult to tap accurately on a phone. The number-of-cards display font is also too small to read at a glance.
-
-**Fix:** Increase the minimum touch target size for stepper buttons (min 44px height), and increase the displayed value font size so it's readable without squinting.
-
----
-
-### P2 – Menu scroll unreliable on device
-
-**Problem:** The menu `ScrollView` is sometimes hard to scroll — touch gestures are intercepted by the dismiss-overlay `TouchableOpacity` underneath.
-
-**Fix:** Investigate whether the overlay's touch handler is swallowing scroll gestures. May need `pointerEvents` or a `ScrollView` touch propagation fix.
-
----
-
-### P3 – Hide Android gesture navigation handle
-
-**Problem:** The system gesture handle bar is visible at the bottom of the screen and overlaps the button bar, wasting space and looking unpolished.
-
-**Fix:** Enable edge-to-edge mode in the Expo/Android config (`android.navigationBarTranslucent` or `expo-navigation-bar`) and apply appropriate bottom insets so the button bar sits above the gesture zone.
-
----
-
-### P3 – Exit button should kill the app
-
-**Problem:** On device, the Exit button (`BackHandler.exitApp()`) may not fully terminate the app — it can remain in the Android recents tray.
-
-**Fix:** Verify `BackHandler.exitApp()` actually kills the process on the Pixel target. If not, use `RNExitApp` or an equivalent that calls `System.exit(0)` on Android.
-
----
-
-### Aspirational – Tutorial screens
-
-See item 2 above. Not a blocker for initial release but needed shortly after.## Pre-release checklist (from device testing)
-
-- [ ] **Session persistence** — Audit what `AsyncStorage` currently saves and ensure all menu settings survive an app restart: number of cards, number of piles, scroll speed, Animated, Show card values, Show goal deck.
-- [ ] **Reset on parameter change** — When `numberOfLanes` or `numberOfCards` changes, reset `currentRound` to 0 and reset scroll position. The whole shuffle execution changes so there's no meaningful round to resume.
+- [x] **"Stacking" status in non-animated mode** — When `animated` is false, "Stacking" has no visual meaning. Treat it as Finished for display purposes.
+- [x] **Round status header color** — Use the same highlight yellow as the rest of the status row (`#e8ff00`).
+- [x] **Cap bar width** — Bar notes grow with lane width; add an absolute pixel cap (e.g. 80px) so they don't become unwieldy on wide screens or with few lanes.
+- [x] **Reset on parameter change** — When `numberOfLanes` or `numberOfCards` changes, reset `currentRound` to 0 and reset scroll position. The whole shuffle execution changes so there's no meaningful round to resume.
+- [x] **Menu stepper buttons too small** — Increase minimum touch target height for +/-1/+/-5 buttons (44px min) and increase the displayed value font size. *(needs device test)*
+- [x] **Session persistence** — All menu settings (numberOfCards, numberOfLanes, scrollSpeed, animated, faceUp, showGoalDeck) are already saved and restored via AsyncStorage.
+- [x] **Menu scroll unreliable** — The dismiss overlay may be swallowing scroll gestures. Root cause: the panel was wrapped in a `TouchableOpacity` (to absorb taps and prevent dismiss), but on Android `TouchableOpacity` claims the touch responder on `onStart`, before the `ScrollView` inside it can recognise a scroll gesture. Fixed by replacing the panel `TouchableOpacity` with a plain `View` using `onStartShouldSetResponder={() => true}` (so taps still don't fall through to the backdrop) and adding `nestedScrollEnabled` to the `ScrollView` (so Android's nested scroll system works correctly). The `ScrollView` can still steal the responder from a plain `View`; it cannot steal it from a `TouchableOpacity`.
 - [ ] **Flicker on round/shuffle transition** — The old permutation/round renders for one frame before the scroll reset takes effect. Batch the new round/permutation and scroll reset into a single update so they land on the same frame.
-- [ ] **"Stacking" status in non-animated mode** — When `animated` is false, "Stacking" has no visual meaning. Treat it as Finished for display purposes.
-- [ ] **Round status header color** — Use the same highlight yellow as the rest of the status row (`#e8ff00`).
-- [ ] **Cap bar width** — Bar notes grow with lane width; add an absolute pixel cap (e.g. 80px) so they don't become unwieldy on wide screens or with few lanes.
-- [ ] **Menu stepper buttons too small** — Increase minimum touch target height for +/-1/+/-5 buttons (44px min) and increase the displayed value font size.
-- [ ] **Menu scroll unreliable** — The dismiss overlay may be swallowing scroll gestures. Investigate `pointerEvents` or touch propagation fix on the `ScrollView`.
-- [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone.
-- [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. Switch to `System.exit(0)` via a native module if needed.
+- [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone. *(needs native build)*
+- [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. *(needs native build)*
 
 ## Aspirational
 
