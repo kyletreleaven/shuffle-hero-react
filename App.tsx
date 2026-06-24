@@ -1195,6 +1195,7 @@ export default function App() {
           const currentRoundTime = Math.max(0, timePerRound - elapsed);
           const remainingRounds = numberOfRounds - currentRound - 1;
           const totalTime = currentRoundTime + (remainingRounds * timePerRound);
+          const totalShuffleTime = numberOfRounds * timePerRound;
           const cardsRemaining = cardStates.filter(c => c.state === 'deck' || c.state === 'falling').length;
           return (
             <>
@@ -1204,11 +1205,11 @@ export default function App() {
               </View>
               <View style={styles.remainingRow}>
                 <Text style={styles.remainingLabel}>Time in Round</Text>
-                <Text style={styles.remainingValue}>{currentRoundTime.toFixed(1)}s</Text>
+                <Text style={styles.remainingValue}>{currentRoundTime.toFixed(1)}s / {timePerRound.toFixed(1)}s</Text>
               </View>
               <View style={styles.remainingRow}>
                 <Text style={styles.remainingLabel}>Time in Shuffle</Text>
-                <Text style={styles.remainingValue}>{totalTime.toFixed(1)}s</Text>
+                <Text style={styles.remainingValue}>{totalTime.toFixed(1)}s / {totalShuffleTime.toFixed(1)}s</Text>
               </View>
             </>
           );

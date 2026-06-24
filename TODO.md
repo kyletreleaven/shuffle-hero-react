@@ -62,7 +62,7 @@
 - [ ] **Round status premature** — Round ends before status reads "Finished"; status lags behind the actual state.
 - [ ] **"Finished" label when more rounds remain** — If there are more rounds, show "Ready for next round" (or similar) instead of "Finished".
 - [ ] **Awkward start after shuffle/round change** — Scrolling feels off after a shuffle or round transition; unclear if it's a pause or the track time being reset to a wrong initial value. Investigate.
-- [ ] **Timer denominator missing** — Time displays for current round and full shuffle show elapsed time only; add the denominator (e.g. "1.2s / 4.0s") so the user can see how they're tracking.
+- [x] **Timer denominator missing** — Time displays for current round and full shuffle show elapsed time only; add the denominator (e.g. "1.2s / 4.0s") so the user can see how they're tracking.
 - [ ] **Menu background clipped** — Menu overlay background doesn't cover the full screen extent; positioning is off.
 - [ ] **Ghost note / card placement mismatch in animation mode** — On device, ghost note bars and animated cards don't align. *(needs device test)*
 - [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone. *(needs native build)*
