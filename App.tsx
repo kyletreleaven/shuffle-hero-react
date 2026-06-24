@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, TouchableOpacity, Pressable, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, Modal, ScrollView, Dimensions, BackHandler, Platform, useWindowDimensions, Linking } from 'react-native';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -474,61 +474,60 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
     >
       <View style={styles.overlay}>
         <TouchableOpacity style={StyleSheet.absoluteFillObject} onPress={onClose} activeOpacity={1} />
-        <Pressable style={styles.menuPanel}>
+        <View style={styles.menuPanel}>
           <ScrollView
             style={styles.menuScrollView}
             showsVerticalScrollIndicator={true}
             nestedScrollEnabled={true}
           >
             <View style={styles.menuScrollContent} onStartShouldSetResponder={() => true}>
-            <Text style={styles.menuTitle}>Options Menu</Text>
+              <Text style={styles.menuTitle}>Options Menu</Text>
 
-            <NumberOfCardsControl
-              value={numberOfCards}
-              onChange={setNumberOfCards}
-            />
+              <NumberOfCardsControl
+                value={numberOfCards}
+                onChange={setNumberOfCards}
+              />
 
-            <NumberOfLanesControl
-              value={numberOfLanes}
-              onChange={setNumberOfLanes}
-            />
+              <NumberOfLanesControl
+                value={numberOfLanes}
+                onChange={setNumberOfLanes}
+              />
 
-            <SpeedControl
-              value={scrollSpeed}
-              onChange={setScrollSpeed}
-            />
+              <SpeedControl
+                value={scrollSpeed}
+                onChange={setScrollSpeed}
+              />
 
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setAnimated(!animated)}>
-              <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
-                {animated && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.checkboxLabel}>Show shuffle</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.checkboxRow} onPress={() => setAnimated(!animated)}>
+                <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
+                  {animated && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.checkboxLabel}>Show shuffle</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
-              <View style={[styles.checkbox, faceUp && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
-                {faceUp && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
-              </View>
-              <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show card values</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
+                <View style={[styles.checkbox, faceUp && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                  {faceUp && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+                </View>
+                <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show card values</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setShowGoalDeck(!showGoalDeck)} disabled={!animated}>
-              <View style={[styles.checkbox, showGoalDeck && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
-                {showGoalDeck && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
-              </View>
-              <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show goal deck</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.checkboxRow} onPress={() => setShowGoalDeck(!showGoalDeck)} disabled={!animated}>
+                <View style={[styles.checkbox, showGoalDeck && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                  {showGoalDeck && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+                </View>
+                <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show goal deck</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
-              style={styles.homepageLink}
-            >
-              <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
-            </TouchableOpacity>
-
+              <TouchableOpacity
+                onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
+                style={styles.homepageLink}
+              >
+                <Text style={styles.homepageLinkText}>Visit Shuffle Hero Homepage</Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
-        </Pressable>
+        </View>
       </View>
     </Modal>
   );
