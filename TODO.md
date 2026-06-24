@@ -59,6 +59,12 @@
 - [x] **Session persistence** — All menu settings (numberOfCards, numberOfLanes, scrollSpeed, animated, faceUp, showGoalDeck) are already saved and restored via AsyncStorage.
 - [x] **Menu scroll unreliable** — The dismiss overlay may be swallowing scroll gestures. Root cause: the panel was wrapped in a `TouchableOpacity` (to absorb taps and prevent dismiss), but on Android `TouchableOpacity` claims the touch responder on `onStart`, before the `ScrollView` inside it can recognise a scroll gesture. Fixed by replacing the panel `TouchableOpacity` with a plain `View` using `onStartShouldSetResponder={() => true}` (so taps still don't fall through to the backdrop) and adding `nestedScrollEnabled` to the `ScrollView` (so Android's nested scroll system works correctly). The `ScrollView` can still steal the responder from a plain `View`; it cannot steal it from a `TouchableOpacity`.
 - [ ] **Flicker on round/shuffle transition** — The old permutation/round renders for one frame before the scroll reset takes effect. Batch the new round/permutation and scroll reset into a single update so they land on the same frame.
+- [ ] **Round status premature** — Round ends before status reads "Finished"; status lags behind the actual state.
+- [ ] **"Finished" label when more rounds remain** — If there are more rounds, show "Ready for next round" (or similar) instead of "Finished".
+- [ ] **Awkward start after shuffle/round change** — Scrolling feels off after a shuffle or round transition; unclear if it's a pause or the track time being reset to a wrong initial value. Investigate.
+- [ ] **Timer denominator missing** — Time displays for current round and full shuffle show elapsed time only; add the denominator (e.g. "1.2s / 4.0s") so the user can see how they're tracking.
+- [ ] **Menu background clipped** — Menu overlay background doesn't cover the full screen extent; positioning is off.
+- [ ] **Ghost note / card placement mismatch in animation mode** — On device, ghost note bars and animated cards don't align. *(needs device test)*
 - [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone. *(needs native build)*
 - [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. *(needs native build)*
 
