@@ -1778,7 +1778,7 @@ function makeStyles(scale: number) {
       position: 'absolute',
       top: s(10),
       right: s(10),
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
       borderRadius: s(8),
       padding: s(8),
       zIndex: 250,
