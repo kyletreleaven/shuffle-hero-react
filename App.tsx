@@ -232,13 +232,13 @@ function SpeedControl({ value, onChange }: SpeedControlProps) {
     <View style={styles.settingControl}>
       <View style={styles.sliderHeader}>
         <Text style={styles.settingLabel}>Speed (cards/sec)</Text>
-        <Text style={styles.sliderValue}>{value.toFixed(1)}</Text>
+        <Text style={styles.sliderValue}>{value.toFixed(2)}</Text>
       </View>
       <CrossPlatformSlider
         style={styles.slider}
         minimumValue={0}
         maximumValue={3}
-        step={0.1}
+        step={0.01}
         value={value}
         onValueChange={onChange}
         minimumTrackTintColor="#007AFF"
