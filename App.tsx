@@ -1057,48 +1057,7 @@ export default function App() {
               />
             ))}
 
-            {/* Render notes: bars in normal mode, dashed card outlines in dev mode */}
-            {notes.map((note) => animated ? (
-              <View
-                key={note.id}
-                style={[
-                  styles.ghostNote,
-                  {
-                    width: CARD_WIDTH,
-                    height: CARD_HEIGHT,
-                    borderColor: note.color,
-                    left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
-                    top: note.position,
-                  },
-                ]}
-              >
-                <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
-              </View>
-            ) : (() => {
-                const bandWidth = laneWidth - 2 * LANE_MARGIN;
-                const barWidth = Math.min(Math.round(bandWidth * 0.6), 80);
-                const barHeight = Math.round(CARD_HEIGHT * 0.35);
-                const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
-                return (
-                  <React.Fragment key={note.id}>
-                    <View
-                      style={[styles.barNote, {
-                        width: barWidth,
-                        height: barHeight,
-                        backgroundColor: note.color,
-                        left: barLeft,
-                        top: note.position,
-                      }]}
-                    />
-                    <Text style={[styles.barNoteNumber, { left: barLeft + barWidth, top: note.position + barHeight }]}>
-                      {note.id + 1}
-                    </Text>
-                  </React.Fragment>
-                );
-              })()
-            )}
-
-            {/* Cards are rendered in the unified overlay, not here */}
+            {/* Notes and cards are rendered in overlays, not here */}
           </View>
         </AutoScrollView>}
 
@@ -1112,6 +1071,51 @@ export default function App() {
             ))}
           </View>
         )}
+      </View>
+
+      {/* Note overlay — screen-coord rendering, sits above ScrollView in scene graph */}
+      <View style={styles.noteOverlay} pointerEvents="none">
+        {notes.map((note) => {
+          const screenY = note.position - scrollY;
+          return animated ? (
+            <View
+              key={note.id}
+              style={[
+                styles.ghostNote,
+                {
+                  width: CARD_WIDTH,
+                  height: CARD_HEIGHT,
+                  borderColor: note.color,
+                  left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
+                  top: screenY,
+                },
+              ]}
+            >
+              <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
+            </View>
+          ) : (() => {
+            const bandWidth = laneWidth - 2 * LANE_MARGIN;
+            const barWidth = Math.min(Math.round(bandWidth * 0.6), 80);
+            const barHeight = Math.round(CARD_HEIGHT * 0.35);
+            const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
+            return (
+              <React.Fragment key={note.id}>
+                <View
+                  style={[styles.barNote, {
+                    width: barWidth,
+                    height: barHeight,
+                    backgroundColor: note.color,
+                    left: barLeft,
+                    top: screenY,
+                  }]}
+                />
+                <Text style={[styles.barNoteNumber, { left: barLeft + barWidth, top: screenY + barHeight }]}>
+                  {note.id + 1}
+                </Text>
+              </React.Fragment>
+            );
+          })();
+        })}
       </View>
 
       {/* Top deck row - dev mode only */}
@@ -1456,6 +1460,13 @@ function makeStyles(scale: number) {
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
+    },
+    noteOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
     },
     cardOverlay: {
       position: 'absolute',
