@@ -1192,12 +1192,12 @@ export default function App() {
           {`Round ${currentRound + 1}/${numberOfRounds} - ${
             animated
               ? cardStates.every(c => c.state === 'collected')
-                ? 'Finished'
+                ? currentRound < numberOfRounds - 1 ? 'Next Round →' : 'Finished'
                 : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
                   ? 'Dealing'
                   : 'Stacking'
               : trackTime >= maxTrackTime
-                ? 'Finished'
+                ? currentRound < numberOfRounds - 1 ? 'Next Round →' : 'Finished'
                 : 'Dealing'
           }`}
         </Text>
