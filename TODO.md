@@ -38,13 +38,12 @@
 
 **Problem:** All layout constants are hardcoded (`CARD_WIDTH=40`, `CARD_HEIGHT=60`, `CARD_SPACING=150`, deck/stack row heights fixed in px). On a phone emulator, buttons and text are too large relative to the screen. On a wide web viewport, cards are too small and spacing feels wrong.
 
-**Desired end state:**
-- Derive a `scale` factor from `windowDimensions` at runtime (e.g. `min(width / BASE_WIDTH, height / BASE_HEIGHT)`)
-- Apply `scale` to: card width/height, card spacing, font sizes, deck and stack row heights
-- Constants move from module-level to values computed inside the component (or a dedicated hook)
-- `ScrollHelper` currently uses hardcoded `CARD_SPACING` — refactor to accept it as a parameter so it stays in sync with the scaled value
-
-**Targets:** phone (small screen, high density), Android emulator (large resolution), web (variable viewport width).
+- [x] **Scale factor** — `scale` derived from `min(windowDimensions.width, windowDimensions.height) / BASE_SCREEN_WIDTH` at runtime
+- [x] **Card dimensions scale** — `CARD_WIDTH`, `CARD_HEIGHT`, `CARD_SPACING` computed inside the component from `scale`
+- [x] **UI chrome scales** — `BOTTOM_STACK_HEIGHT`, `DECK_ROW_PADDING`, font sizes, lane margin all scale with device
+- [x] **ScrollHelper accepts cardSpacing** — no longer hardcoded; receives scaled `CARD_SPACING` at construction
+- [ ] **Verify on phone** — test scaling on a small screen / high-density device *(needs device test)*
+- [ ] **Verify on wide web viewport** — check that layout doesn't feel too sparse at large browser widths
 
 
 ---
