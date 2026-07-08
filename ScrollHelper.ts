@@ -29,7 +29,7 @@ export class ScrollHelper {
       ? Math.max(windowHeight + cardHeight, leadInPixels)
       : leadInPixels;
     this.contentHeight = cardSpacing * (numberOfCards - 1);
-    this.endPaddingPixels = windowHeight;
+    this.endPaddingPixels = windowHeight + cardHeight / 4;
     this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
 
     this.minTime = -this.startPaddingPixels / this.scrollPixelsPerSec;

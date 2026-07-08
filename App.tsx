@@ -1196,7 +1196,7 @@ export default function App() {
                 : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
                   ? 'Dealing'
                   : 'Stacking'
-              : scrollY <= 2
+              : scrollY <= 0
                 ? currentRound < numberOfRounds - 1 ? 'Next Round →' : 'Finished'
                 : 'Dealing'
           }`}
@@ -1209,7 +1209,7 @@ export default function App() {
         {scrollSpeed > 0 ? (() => {
           const timePerRound = scrollHelper.timePerRound;
           const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
-          const currentRoundTime = timePerRound - elapsed; // debug: unclamped to surface negative values on transition
+          const currentRoundTime = Math.max(0, timePerRound - elapsed);
           const remainingRounds = numberOfRounds - currentRound - 1;
           const totalTime = currentRoundTime + (remainingRounds * timePerRound);
           const totalShuffleTime = numberOfRounds * timePerRound;
