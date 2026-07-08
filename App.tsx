@@ -498,26 +498,28 @@ function MenuPanel({ visible, onClose, numberOfCards, setNumberOfCards, numberOf
                 onChange={setScrollSpeed}
               />
 
-              <TouchableOpacity style={styles.checkboxRow} onPress={() => setAnimated(!animated)}>
-                <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
-                  {animated && <Text style={styles.checkmark}>✓</Text>}
-                </View>
-                <Text style={styles.checkboxLabel}>Show shuffle</Text>
-              </TouchableOpacity>
+              {Platform.OS === 'web' && <>
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setAnimated(!animated)}>
+                  <View style={[styles.checkbox, animated && styles.checkboxChecked]}>
+                    {animated && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxLabel}>Show shuffle</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
-                <View style={[styles.checkbox, faceUp && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
-                  {faceUp && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
-                </View>
-                <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show card values</Text>
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setFaceUp(!faceUp)} disabled={!animated}>
+                  <View style={[styles.checkbox, faceUp && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                    {faceUp && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+                  </View>
+                  <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show card values</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity style={styles.checkboxRow} onPress={() => setShowGoalDeck(!showGoalDeck)} disabled={!animated}>
-                <View style={[styles.checkbox, showGoalDeck && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
-                  {showGoalDeck && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
-                </View>
-                <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show goal deck</Text>
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setShowGoalDeck(!showGoalDeck)} disabled={!animated}>
+                  <View style={[styles.checkbox, showGoalDeck && styles.checkboxChecked, !animated && styles.checkboxDisabled]}>
+                    {showGoalDeck && <Text style={[styles.checkmark, !animated && styles.checkmarkDisabled]}>✓</Text>}
+                  </View>
+                  <Text style={[styles.checkboxLabel, !animated && styles.checkboxLabelDisabled]}>Show goal deck</Text>
+                </TouchableOpacity>
+              </>}
 
               <TouchableOpacity
                 onPress={() => Linking.openURL('https://kyletreleaven.github.io/shuffle-hero/')}
