@@ -1196,7 +1196,7 @@ export default function App() {
                 : cardStates.some(c => c.state === 'deck' || c.state === 'falling')
                   ? 'Dealing'
                   : 'Stacking'
-              : trackTime >= maxTrackTime
+              : scrollY <= 2
                 ? currentRound < numberOfRounds - 1 ? 'Next Round →' : 'Finished'
                 : 'Dealing'
           }`}
