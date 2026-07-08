@@ -67,6 +67,16 @@
 - [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone. *(needs native build)*
 - [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. *(needs native build)*
 
+## Performance
+
+- [x] **Memoize ScrollHelper construction** — `new ScrollHelper(...)` runs on every render (every animation frame). Wrap in `useMemo` keyed on its inputs.
+- [ ] **O(1) card count** — `notes.filter(note => note.position < scrollY)` scans all cards every frame. Replace with direct math: cards appear in index order at regular `cardSpacing` intervals so the count is a single division.
+- [ ] **`cardStates.every/some` in status label** — Two O(n) scans per frame in animated mode. Derive a single `roundStatus` value in the `cardStates` useMemo and read it directly.
+- [ ] **Note overlay allocation** — `notes.map(...)` allocates new JSX for every bar every frame. Extract a memoized note component so React can skip unchanged notes.
+- [ ] **Audit `cardStates` and `cardScreenPositions` deps** — Confirm whether `scrollY` is in their dep arrays; if so, they recompute every frame. May be unavoidable in animated mode but worth verifying.
+
+---
+
 ## Aspirational
 
 - [ ] **Tutorial screens** — See item 2 above.

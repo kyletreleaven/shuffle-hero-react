@@ -599,13 +599,13 @@ export default function App() {
   const zeroY = buttonBarHeight > 0 ? windowDimensions.height - buttonBarHeight : null;
 
   // Calculate track dimensions
-  const scrollHelper = new ScrollHelper(
+  const scrollHelper = useMemo(() => new ScrollHelper(
     Math.max(scrollSpeed, 0.01),  // for sensible y updates while speed is zero
     numberOfCards,
     zeroY ?? windowDimensions.height,
     CARD_SPACING,
     CARD_HEIGHT,
-  );
+  ), [scrollSpeed, numberOfCards, zeroY, CARD_SPACING, CARD_HEIGHT]);
 
   const initialScrollY = scrollHelper.initialScrollY;
   const [scrollY, setScrollY] = useState(initialScrollY);
