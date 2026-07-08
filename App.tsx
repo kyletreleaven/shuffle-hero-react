@@ -1218,7 +1218,10 @@ export default function App() {
           const totalShuffleTime = numberOfRounds * timePerRound;
           const cardsRemaining = animated
             ? cardStates.filter(c => c.state === 'deck' || c.state === 'falling').length
-            : notes.filter(note => note.position < scrollY).length;
+            : (() => {
+                const x = (scrollHelper.scrollYBias + scrollHelper.windowHeight - scrollY) / scrollHelper.cardSpacing;
+                return Math.max(0, numberOfCards - Math.max(0, Math.floor(x) + 1));
+              })();
           return (
             <>
               <View style={styles.remainingRow}>

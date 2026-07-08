@@ -70,7 +70,7 @@
 ## Performance
 
 - [x] **Memoize ScrollHelper construction** — `new ScrollHelper(...)` runs on every render (every animation frame). Wrap in `useMemo` keyed on its inputs.
-- [ ] **O(1) card count** — `notes.filter(note => note.position < scrollY)` scans all cards every frame. Replace with direct math: cards appear in index order at regular `cardSpacing` intervals so the count is a single division.
+- [x] **O(1) card count** — Replaced `notes.filter(...)` with direct math: `x = (scrollYBias + windowHeight - scrollY) / cardSpacing`, `remaining = max(0, n - max(0, floor(x) + 1))`.
 - [ ] **`cardStates.every/some` in status label** — Two O(n) scans per frame in animated mode. Derive a single `roundStatus` value in the `cardStates` useMemo and read it directly.
 - [ ] **Note overlay allocation** — `notes.map(...)` allocates new JSX for every bar every frame. Extract a memoized note component so React can skip unchanged notes.
 - [ ] **Audit `cardStates` and `cardScreenPositions` deps** — Confirm whether `scrollY` is in their dep arrays; if so, they recompute every frame. May be unavoidable in animated mode but worth verifying.
