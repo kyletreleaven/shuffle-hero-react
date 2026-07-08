@@ -62,7 +62,7 @@
 - [x] **"Finished" label when more rounds remain** — Shows "Next Round →" when more rounds remain, "Finished" only on the last round.
 - [x] **Awkward start after shuffle/round change** — Fixed by measuring buttonBarHeight via onLayout and using zeroY as ScrollHelper's windowHeight, plus correct lead-in geometry.
 - [x] **Timer denominator missing** — Time displays for current round and full shuffle show elapsed time only; add the denominator (e.g. "1.2s / 4.0s") so the user can see how they're tracking.
-- [ ] **Menu background clipped** — Menu overlay background doesn't cover the full screen extent; positioning is off.
+- [x] **Menu background clipped** — Fixed with `flex: 1` on overlay and `statusBarTranslucent` on Modal.
 - [ ] **Hide Android gesture navigation handle** — Enable edge-to-edge mode (`expo-navigation-bar` or `android.navigationBarTranslucent`) and apply bottom insets so the button bar clears the gesture zone. *(needs native build)*
 - [ ] **Exit kills the app** — Verify `BackHandler.exitApp()` fully terminates the process and removes it from the recents tray on device. *(needs native build)*
 
