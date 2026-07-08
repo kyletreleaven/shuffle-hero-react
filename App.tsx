@@ -543,6 +543,52 @@ const samplePermutation = (numCards: number) => {
   return perm;
 }
 
+type NoteOverlayContentProps = {
+  notes: { id: number; lane: number; position: number; color: string }[];
+  animated: boolean;
+  laneWidth: number;
+  CARD_WIDTH: number;
+  CARD_HEIGHT: number;
+  LANE_MARGIN: number;
+  styles: ReturnType<typeof makeStyles>;
+};
+
+const NoteOverlayContent = React.memo(({ notes, animated, laneWidth, CARD_WIDTH, CARD_HEIGHT, LANE_MARGIN, styles }: NoteOverlayContentProps) => {
+  return <>
+    {notes.map((note) => animated ? (
+      <View
+        key={note.id}
+        style={[styles.ghostNote, {
+          width: CARD_WIDTH,
+          height: CARD_HEIGHT,
+          borderColor: note.color,
+          left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
+          top: note.position,
+        }]}
+      >
+        <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
+      </View>
+    ) : (() => {
+      const bandWidth = laneWidth - 2 * LANE_MARGIN;
+      const barWidth = Math.min(Math.round(bandWidth * 0.6), 80);
+      const barHeight = Math.round(CARD_HEIGHT * 0.35);
+      const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
+      return (
+        <React.Fragment key={note.id}>
+          <View style={[styles.barNote, {
+            width: barWidth, height: barHeight,
+            backgroundColor: note.color,
+            left: barLeft, top: note.position,
+          }]} />
+          <Text style={[styles.barNoteNumber, { left: barLeft + barWidth, top: note.position + barHeight }]}>
+            {note.id + 1}
+          </Text>
+        </React.Fragment>
+      );
+    })())}
+  </>;
+});
+
 
 export default function App() {
   const windowDimensions = useWindowDimensions();
@@ -1076,49 +1122,17 @@ export default function App() {
         )}
       </View>
 
-      {/* Note overlay — screen-coord rendering, sits above ScrollView in scene graph */}
-      <View style={styles.noteOverlay} pointerEvents="none">
-        {notes.map((note) => {
-          const screenY = note.position - scrollY;
-          return animated ? (
-            <View
-              key={note.id}
-              style={[
-                styles.ghostNote,
-                {
-                  width: CARD_WIDTH,
-                  height: CARD_HEIGHT,
-                  borderColor: note.color,
-                  left: note.lane * laneWidth + laneWidth / 2 - CARD_WIDTH / 2,
-                  top: screenY,
-                },
-              ]}
-            >
-              <Text style={[styles.ghostNoteNumber, { color: note.color }]}>{note.id + 1}</Text>
-            </View>
-          ) : (() => {
-            const bandWidth = laneWidth - 2 * LANE_MARGIN;
-            const barWidth = Math.min(Math.round(bandWidth * 0.6), 80);
-            const barHeight = Math.round(CARD_HEIGHT * 0.35);
-            const barLeft = note.lane * laneWidth + LANE_MARGIN + Math.round((bandWidth - barWidth) / 2);
-            return (
-              <React.Fragment key={note.id}>
-                <View
-                  style={[styles.barNote, {
-                    width: barWidth,
-                    height: barHeight,
-                    backgroundColor: note.color,
-                    left: barLeft,
-                    top: screenY,
-                  }]}
-                />
-                <Text style={[styles.barNoteNumber, { left: barLeft + barWidth, top: screenY + barHeight }]}>
-                  {note.id + 1}
-                </Text>
-              </React.Fragment>
-            );
-          })();
-        })}
+      {/* Note overlay — content-coord notes inside translated container */}
+      <View style={[styles.noteOverlay, { transform: [{ translateY: -scrollY }], height: scrollHelper.trackHeight }]} pointerEvents="none">
+        <NoteOverlayContent
+          notes={notes}
+          animated={animated}
+          laneWidth={laneWidth}
+          CARD_WIDTH={CARD_WIDTH}
+          CARD_HEIGHT={CARD_HEIGHT}
+          LANE_MARGIN={LANE_MARGIN}
+          styles={styles}
+        />
       </View>
 
       {/* Top deck row - dev mode only */}
@@ -1474,7 +1488,7 @@ function makeStyles(scale: number) {
       top: 0,
       left: 0,
       right: 0,
-      bottom: 0,
+      overflow: 'visible',
     },
     cardOverlay: {
       position: 'absolute',
