@@ -1,5 +1,6 @@
 export const BASE_CARD_SPACING = 150; // Vertical spacing between cards at base scale
-export const START_PADDING_SECONDS = 2; // Seconds of track at bottom
+export const LEAD_IN_SECONDS = 2;     // Tunable: seconds before first card reaches zero (bottom of screen)
+export const CLIP_LEAD_IN_TO_SCREEN = true; // If true, first card never starts below the top of screen
 
 export class ScrollHelper {
 
@@ -7,7 +8,6 @@ export class ScrollHelper {
   readonly startPaddingPixels: number;
   readonly contentHeight: number;
   readonly endPaddingPixels: number;
-  readonly contentStartSec: number;
   readonly scrollYBias: number;
 
   public readonly trackHeight: number;
@@ -20,16 +20,19 @@ export class ScrollHelper {
     public readonly numberOfCards: number,
     public readonly windowHeight: number,
     public readonly cardSpacing: number = BASE_CARD_SPACING,
+    public readonly cardHeight: number = 0,
   ) {
     this.scrollPixelsPerSec = scrollCardsPerSec * cardSpacing;
 
-    this.startPaddingPixels = windowHeight;
+    const leadInPixels = LEAD_IN_SECONDS * this.scrollPixelsPerSec;
+    this.startPaddingPixels = CLIP_LEAD_IN_TO_SCREEN
+      ? Math.max(windowHeight + cardHeight, leadInPixels)
+      : leadInPixels;
     this.contentHeight = cardSpacing * (numberOfCards - 1);
     this.endPaddingPixels = windowHeight;
     this.trackHeight = this.startPaddingPixels + this.contentHeight + this.endPaddingPixels;
 
-    this.contentStartSec = 0;
-    this.minTime = this.contentStartSec - windowHeight / this.scrollPixelsPerSec;
+    this.minTime = -this.startPaddingPixels / this.scrollPixelsPerSec;
     this.timePerRound = (this.trackHeight - windowHeight) / this.scrollPixelsPerSec;
     this.maxTime = this.minTime + this.timePerRound;
 

@@ -5,7 +5,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import Slider from '@react-native-community/slider';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ShuffleUtil from './ShuffleUtil';
-import { ScrollHelper, BASE_CARD_SPACING, START_PADDING_SECONDS } from './ScrollHelper';
+import { ScrollHelper, BASE_CARD_SPACING } from './ScrollHelper';
 import { calculateDeckXPositions } from './utils/AnimationHelper';
 
 const LANE_COUNT = 5;
@@ -573,6 +573,7 @@ export default function App() {
   const [animated, setAnimated] = useState(false);
   const [shuffleHoldReady, setShuffleHoldReady] = useState(false);
   const [prevHoldReady, setPrevHoldReady] = useState(false);
+  const [buttonBarHeight, setButtonBarHeight] = useState(0);
 
   // Dynamic top deck height based on whether goal deck is shown
   const topDeckHeight = animated
@@ -590,17 +591,27 @@ export default function App() {
   });
   const numberOfCards = permutation.length;
 
+  // zeroY: screen y of the zero point (top of button bar). Cards exit when their top crosses this line.
+  // Suppress track until measured to avoid a geometry jump on first render.
+  const zeroY = buttonBarHeight > 0 ? windowDimensions.height - buttonBarHeight : null;
+
   // Calculate track dimensions
   const scrollHelper = new ScrollHelper(
     Math.max(scrollSpeed, 0.01),  // for sensible y updates while speed is zero
     numberOfCards,
-    windowDimensions.height,
+    zeroY ?? windowDimensions.height,
     CARD_SPACING,
+    CARD_HEIGHT,
   );
 
   const initialScrollY = scrollHelper.initialScrollY;
   const [scrollY, setScrollY] = useState(initialScrollY);
   const {trackHeight, minTime: minTrackTime, maxTime: maxTrackTime} = scrollHelper;
+
+  // Sync scrollY when zeroY is first measured
+  useEffect(() => {
+    if (zeroY !== null) setScrollY(scrollHelper.initialScrollY);
+  }, [zeroY]);
 
   // Helper to set trackTime with clamping
   const setScrollYClamped = useCallback((scrollY: number) => {
@@ -619,6 +630,8 @@ export default function App() {
       scrollHelper.scrollCardsPerSec,
       perm.length,
       scrollHelper.windowHeight,
+      scrollHelper.cardSpacing,
+      scrollHelper.cardHeight,
     );
     setScrollY(nextScrollHelper.initialScrollY);
     setIsPaused(false);
@@ -1020,7 +1033,7 @@ export default function App() {
       />
       {/* Main track area - full height scrollable */}
       <View style={styles.trackPanelFull}>
-        <AutoScrollView
+        {zeroY !== null && <AutoScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -1087,7 +1100,7 @@ export default function App() {
 
             {/* Cards are rendered in the unified overlay, not here */}
           </View>
-        </AutoScrollView>
+        </AutoScrollView>}
 
         {/* Pile labels in normal mode: float at bottom of track, above button bar */}
         {!animated && (
@@ -1192,7 +1205,7 @@ export default function App() {
         {scrollSpeed > 0 ? (() => {
           const timePerRound = scrollHelper.timePerRound;
           const elapsed = scrollHelper.trackTime(scrollY) - minTrackTime;
-          const currentRoundTime = Math.max(0, timePerRound - elapsed);
+          const currentRoundTime = timePerRound - elapsed; // debug: unclamped to surface negative values on transition
           const remainingRounds = numberOfRounds - currentRound - 1;
           const totalTime = currentRoundTime + (remainingRounds * timePerRound);
           const totalShuffleTime = numberOfRounds * timePerRound;
@@ -1235,7 +1248,7 @@ export default function App() {
       )}
 
       {/* Bottom button row */}
-      <View style={styles.bottomButtonRow}>
+      <View style={styles.bottomButtonRow} onLayout={e => setButtonBarHeight(e.nativeEvent.layout.height)}>
           <TouchableOpacity
             style={styles.bottomBarButton}
             onPress={() => setMenuVisible(true)}
