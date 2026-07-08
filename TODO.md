@@ -72,6 +72,7 @@
 - [x] **Memoize ScrollHelper construction** — `new ScrollHelper(...)` runs on every render (every animation frame). Wrap in `useMemo` keyed on its inputs.
 - [x] **O(1) card count** — Replaced `notes.filter(...)` with direct math: `x = (scrollYBias + windowHeight - scrollY) / cardSpacing`, `remaining = max(0, n - max(0, floor(x) + 1))`.
 - [x] **Note overlay allocation** — Extracted `NoteOverlayContent` as a `React.memo` component inside a translated container; notes use content coords and skip re-render during scrolling.
+- [ ] **Window resize resets round** — On web, resizing the window changes `zeroY` and `scrollHelper` geometry, which resets `scrollY` to `initialScrollY`. Fix: store track time as state and derive `scrollY = scrollHelper.scrollY(trackTime)` so position is preserved across geometry changes.
 - [ ] **`cardStates.every/some` in status label** — Two O(n) scans per frame in animated mode. Derive a single `roundStatus` value in the `cardStates` useMemo and read it directly. *(web/animated only — defer)*
 - [ ] **Audit `cardStates` and `cardScreenPositions` deps** — Confirm whether `scrollY` is in their dep arrays; if so, they recompute every frame. *(web/animated only — defer)*
 
