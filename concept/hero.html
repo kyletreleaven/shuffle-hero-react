@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Guitar Hero</title>
+<style>
+    body {
+        background-color: #000;
+        color: #fff;
+        display: flex;
+        flex-direction: column; /* Align items vertically */
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: 'Arial', sans-serif;
+    }
+
+    #game-container {
+        width: 400px;
+        height: 600px;
+        background-color: #111;
+        border: 2px solid #333;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 20px; /* Add some space between game and legend */
+    }
+
+    .note {
+        position: absolute;
+        width: 80px;
+        height: 30px;
+        border-radius: 15px;
+    }
+
+    .green { background-color: #0f0; }
+    .red { background-color: #f00; }
+    .yellow { background-color: #ff0; }
+    .blue { background-color: #00f; }
+
+    #hit-line {
+        position: absolute;
+        bottom: 50px;
+        width: 100%;
+        height: 5px;
+        background-color: #fff;
+    }
+
+    #score {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 24px;
+    }
+
+    #legend {
+        display: flex;
+        justify-content: space-around;
+        width: 400px;
+        background-color: #222;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    .legend-key {
+        display: flex;
+        align-items: center;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .legend-key span {
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="score">Score: 0</div>
+    <div id="hit-line"></div>
+</div>
+
+<div id="legend">
+    <div class="legend-key">
+        <div class="legend-color green"></div>
+        <span>A</span>
+    </div>
+    <div class="legend-key">
+        <div class="legend-color red"></div>
+        <span>S</span>
+    </div>
+    <div class="legend-key">
+        <div class="legend-color yellow"></div>
+        <span>D</span>
+    </div>
+    <div class="legend-key">
+        <div class="legend-color blue"></div>
+        <span>F</span>
+    </div>
+</div>
+
+<script>
+    const gameContainer = document.getElementById('game-container');
+    const scoreDisplay = document.getElementById('score');
+    const hitLine = document.getElementById('hit-line');
+
+    let score = 0;
+    const noteColors = ['green', 'red', 'yellow', 'blue'];
+    const keyMapping = {
+        'a': 'green',
+        's': 'red',
+        'd': 'yellow',
+        'f': 'blue'
+    };
+
+    function createNote() {
+        const note = document.createElement('div');
+        const randomColor = noteColors[Math.floor(Math.random() * noteColors.length)];
+        note.className = `note ${randomColor}`;
+        note.style.left = `${Math.floor(Math.random() * (gameContainer.offsetWidth - 80))}px`;
+        note.style.top = '-30px';
+        gameContainer.appendChild(note);
+        moveNote(note);
+    }
+
+    function moveNote(note) {
+        let topPosition = -30;
+        const animationSpeed = 5;
+        const interval = setInterval(() => {
+            topPosition += animationSpeed;
+            note.style.top = `${topPosition}px`;
+            if (topPosition > gameContainer.offsetHeight) {
+                note.remove();
+                clearInterval(interval);
+            }
+        }, 1000 / 60);
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.repeat) return;
+        const key = event.key.toLowerCase();
+        if (keyMapping[key]) {
+            const color = keyMapping[key];
+            const notesOfColor = document.querySelectorAll(`.note.${color}`);
+            notesOfColor.forEach(note => {
+                const noteRect = note.getBoundingClientRect();
+                const hitLineRect = hitLine.getBoundingClientRect();
+                if (noteRect.bottom > hitLineRect.top && noteRect.top < hitLineRect.bottom) {
+                    note.remove();
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                }
+            });
+        }
+    });
+
+    setInterval(createNote, 1200);
+</script>
+
+</body>
+</html>
